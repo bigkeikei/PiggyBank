@@ -33,7 +33,7 @@ namespace PiggyBank
             services.AddMvc();
             services.AddScoped(
                 (_) => (PiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
-            services.AddTransient<IAccountRepository, AccountEFRepository>();
+            services.AddTransient<IUserRepository, UserEFRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

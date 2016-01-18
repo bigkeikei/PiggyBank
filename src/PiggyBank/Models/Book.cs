@@ -11,5 +11,6 @@ namespace PiggyBank.Models
         public string Name { get; set; }
         public bool IsValid { get; set; }
         public virtual IEnumerable<Account> Accounts { get; set; }
+        public virtual User User { get; set; }
     }
 }
