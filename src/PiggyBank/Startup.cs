@@ -8,6 +8,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using PiggyBank.Models;
+using PiggyBank.Models.Data;
+
 namespace PiggyBank
 {
     public class Startup
@@ -28,6 +31,9 @@ namespace PiggyBank
         {
             // Add framework services.
             services.AddMvc();
+            services.AddScoped(
+                (_) => (PiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
+            services.AddTransient<IAccountRepository, AccountEFRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
