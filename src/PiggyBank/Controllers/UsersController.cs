@@ -16,19 +16,19 @@ namespace PiggyBank.Controllers
     {
 
         [FromServices]
-        public IUserRepository Users { get; set; }
+        public IPiggyBankRepository Repo { get; set; }
 
         [HttpGet("[controller]")]
         public IEnumerable<User> Get()
         {
-            return Users.List();
+            return Repo.ListUsers();
         }
 
         [HttpGet("{name}", Name = "GetUser")]
         public IActionResult Get(string name, [FromHeader] string authorization)
         {
             if (!IsAuthorized(name, authorization)) return HttpUnauthorized();
-            return new ObjectResult(Users.Find(name));
+            return new ObjectResult(Repo.FindUser(name));
         }
 
         [HttpPost("[controller]")]
@@ -38,7 +38,7 @@ namespace PiggyBank.Controllers
             {
                 return HttpBadRequest();
             }
-            User userCreated = Users.Create(user);
+            User userCreated = Repo.CreateUser(user);
             return CreatedAtRoute("GetUser", new { controller = "users", name = user.Name }, userCreated);
         }
 
@@ -50,19 +50,19 @@ namespace PiggyBank.Controllers
             {
                 return HttpNotFound(new { Error = "user[" + name + "] not found"});
             }
-            User userToUpdate = Users.Find(name);
+            User userToUpdate = Repo.FindUser(name);
             if (userToUpdate == null || userToUpdate.Id != user.Id)
             {
                 return HttpBadRequest(new { Error = "user.Id [" + user.Id +"] does not match" });
             }
-            Users.Update(user);
+            Repo.UpdateUser(user);
             return new NoContentResult();
         }
 
         [HttpGet("{name}/token")]
         public IActionResult GetToken(string name, [FromQuery] string signature)
         {
-            User user = Users.Find(name);
+            User user = Repo.FindUser(name);
             if (user == null)
             {
                 return HttpNotFound(new { Error = "user[" + name + "] not found" });
@@ -77,12 +77,12 @@ namespace PiggyBank.Controllers
         [HttpGet("{name}/challenge")]
         public IActionResult GetChallenge(string name)
         {
-            User user = Users.Find(name);
+            User user = Repo.FindUser(name);
             if (user == null)
             {
                 return HttpNotFound(new { error = "user[" + name + "] not found" });
             }
-            UserAuthentication auth = Users.GenerateAuthentication(user);
+            UserAuthentication auth = Repo.GenerateAuthentication(user);
             return new ObjectResult(new { Challenge = auth.Challenge });
         }
 
@@ -91,7 +91,7 @@ namespace PiggyBank.Controllers
             // bypass for development
             return true;
 
-            User user = Users.Find(name);
+            User user = Repo.FindUser(name);
             return !(authorization != null && authorization != "Bearer " + user.Authentication.AccessToken);
         }
     }

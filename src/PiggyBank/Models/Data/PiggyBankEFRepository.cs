@@ -4,16 +4,16 @@ using Microsoft.AspNet.Identity;
 
 namespace PiggyBank.Models.Data
 {
-    public class UserEFRepository : IUserRepository
+    public class PiggyBankEFRepository : IPiggyBankRepository
     {
         PiggyBankDbContext _dbContext;
 
-        public UserEFRepository(PiggyBankDbContext dbContext)
+        public PiggyBankEFRepository(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public User Create(User user)
+        public User CreateUser(User user)
         {
             if (user == null)
             {
@@ -25,12 +25,12 @@ namespace PiggyBank.Models.Data
             return userToCreate;
         }
 
-        public User Find(string name)
+        public User FindUser(string name)
         {
             return _dbContext.Users.Where(b => b.Name == name).First();
         }
 
-        public User Update(User user)
+        public User UpdateUser(User user)
         {
             User userToUpdate = GetUserToUpdate(user);
             if (userToUpdate == null)
@@ -43,7 +43,7 @@ namespace PiggyBank.Models.Data
             return userToUpdate;
         }
 
-        public IEnumerable<User> List()
+        public IEnumerable<User> ListUsers()
         {
             return _dbContext.Users;
         }
