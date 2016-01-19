@@ -20,6 +20,7 @@ namespace PiggyBank.Models.Data
                 return null;
             }
             User userToCreate = _dbContext.Users.Add(user);
+            userToCreate.Authentication = new UserAuthentication();
             _dbContext.SaveChanges();
             return userToCreate;
         }
