@@ -8,5 +8,6 @@ namespace PiggyBank.Models
         User Find(string name);
         User Update(User user);
         IEnumerable<User> List();
+        UserAuthentication GenerateAuthentication(User user);
     }
 }

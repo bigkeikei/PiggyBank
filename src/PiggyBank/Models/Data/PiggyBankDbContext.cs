@@ -10,10 +10,7 @@ namespace PiggyBank.Models.Data
     {
         public PiggyBankDbContext(string connectionString) : base(connectionString)
         {
-            if (!Database.Exists())
-            {
-                Database.Create();
-            }
+            Database.CreateIfNotExists();
         }
 
         public DbSet<User> Users { get; set; }
