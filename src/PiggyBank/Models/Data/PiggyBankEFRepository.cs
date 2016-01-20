@@ -11,6 +11,7 @@ namespace PiggyBank.Models.Data
         PiggyBankDbContext _dbContext;
 
         #region User Maintenance
+
         public PiggyBankEFRepository(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
@@ -19,10 +20,10 @@ namespace PiggyBank.Models.Data
         public User CreateUser(User user)
         {
             if (user == null) return null;
-            User userToCreate = _dbContext.Users.Add(user);
-            userToCreate.Authentication = new UserAuthentication();
+            User userCreated = _dbContext.Users.Add(user);
+            userCreated.Authentication = new UserAuthentication();
             _dbContext.SaveChanges();
-            return userToCreate;
+            return userCreated;
         }
 
         public User FindUser(int userId)
@@ -43,11 +44,11 @@ namespace PiggyBank.Models.Data
         public User UpdateUser(User user)
         {
             User userToUpdate = FindUser(user.Id);
-            if (userToUpdate == null) return null;
-            if (userToUpdate.Name != user.Name) return null;
 
-            userToUpdate.IsActive = user.IsActive;
-            userToUpdate.Email = user.Email;
+            if (userToUpdate == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
+            if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
+
+            UpdateModel(userToUpdate, user);
             _dbContext.SaveChanges();
             return userToUpdate;
         }
@@ -90,34 +91,77 @@ namespace PiggyBank.Models.Data
         #endregion
 
         #region Book Maintenance
+
         public Book CreateBook(User user, Book book)
         {
             if (user == null || book == null) return null;
             book.User = user;
-            _dbContext.Books.Add(book);
+            Book bookCreated = _dbContext.Books.Add(book);
             _dbContext.SaveChanges();
-            return book;
+            return bookCreated;
         }
 
-        public Book FindBook(int userid, int bookId)
+        public Book FindBook(int bookId)
         {
             return _dbContext.Books.Find(bookId);
         }
 
-        public Book UpdateBook(int userId, Book book)
+        public Book UpdateBook(Book book)
         {
             if (book == null) return null;
 
-            Book bookToUpdate = FindBook(userId, book.Id);
-            if (bookToUpdate == null) return null;
-
-            bookToUpdate.Name = book.Name;
-            bookToUpdate.IsValid = book.IsValid;
-            bookToUpdate.Currency = book.Currency;
+            Book bookToUpdate = FindBook(book.Id);
+            if (bookToUpdate == null) throw new PiggyBankDataException("Book [" + book.Id + "] cannot be found");
+            UpdateModel(bookToUpdate, book);
             _dbContext.SaveChanges();
             return bookToUpdate;
         }
 
         #endregion
+
+        #region Account Maintenance
+
+        public Account CreateAccount(Book book, Account account)
+        {
+            if (book == null || account == null) return null;
+            account.Book = book;
+            Account accountCreated = _dbContext.Accounts.Add(account);
+            _dbContext.SaveChanges();
+            return accountCreated;
+        }
+
+        public Account FindAccount(int accountId)
+        {
+            return _dbContext.Accounts.Find(accountId);
+        }
+
+        public Account UpdateAccount(Account account)
+        {
+            if (account == null) return null;
+            Account accountToUpdate = FindAccount(account.Id);
+            if (accountToUpdate == null) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
+            UpdateModel(accountToUpdate, account);
+            _dbContext.SaveChanges();
+            return accountToUpdate;
+        }
+
+        #endregion
+
+        public void UpdateModel<T>(T modelToUpdate, T model)
+        {
+            var props = typeof(T).GetProperties();
+            foreach (var prop in props)
+            {
+                if (!prop.IsDefined(typeof(PiggyBankEFIgnore), true))
+                {
+                    prop.SetValue(modelToUpdate, prop.GetValue(model));
+                }
+            }
+        }
+    }
+
+    public class PiggyBankDataException : Exception
+    {
+        public PiggyBankDataException(string message) : base(message) { }
     }
 }

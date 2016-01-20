@@ -12,10 +12,17 @@ namespace PiggyBank.Models
         [JsonIgnore]
         [Key, ForeignKey("User")]
         public int Id { get; set; }
+
         [JsonIgnore]
         public string Challenge { get; set; }
+
+        [JsonIgnore]
+        public string Secret { get; set; }
+
         public string AccessToken { get; set; }
+
         public string RefreshToken { get; set; }
+
         public DateTime? TokenTimeout { get; set; }
 
         [JsonIgnore]
@@ -27,7 +34,7 @@ namespace PiggyBank.Models
             get
             {
                 MD5 md5 = MD5.Create();
-                return Convert.ToBase64String(md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(Challenge + User.Secret)));
+                return Convert.ToBase64String(md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(Challenge + Secret)));
             }
         }
     }

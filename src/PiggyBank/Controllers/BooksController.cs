@@ -3,52 +3,81 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
+
+using PiggyBank.Controllers.Exceptions;
 using PiggyBank.Models;
+using PiggyBank.Models.Data;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace PiggyBank.Controllers
 {
-    [Route("api")]
+    [Route("api/users/{userId}/[controller]")]
     public class BooksController : Controller
     {
         [FromServices]
         public IPiggyBankRepository Repo { get; set; }
 
-        [HttpGet("users/{userId}/[controller]")]
+        [HttpGet]
         public IActionResult List(int userId, [FromHeader] string authorization)
         {
-            User user = TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) return HttpUnauthorized();
-            return new ObjectResult(user.Books);
+            try
+            {
+                User user = GetUser(userId, authorization);
+                return new ObjectResult(user.Books);
+            }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
         }
 
-        [HttpPost("users/{userId}/[controller]")]
+        [HttpPost]
         public IActionResult Post(int userId, [FromBody] Book book, [FromHeader] string authorization)
         {
-            User user = TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) return HttpUnauthorized();
-            Book bookCreated = Repo.CreateBook(user, book);
-            return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id}, bookCreated);
+            try
+            {
+                User user = GetUser(userId, authorization);
+                Book bookCreated = Repo.CreateBook(user, book);
+                return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id }, bookCreated);
+            }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        [HttpGet("users/{userId}/[controller]/{bookId}", Name ="GetBook")]
+        [HttpGet("{bookId}", Name ="GetBook")]
         public IActionResult Get(int userId, int bookId, [FromHeader] string authorization)
         {
-            User user = TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) return HttpUnauthorized();
-            return new ObjectResult(Repo.FindBook(userId, bookId));
+            try
+            {
+                User user = GetUser(userId, authorization);
+                Book book = Repo.FindBook(bookId);
+                if (book == null || book.User.Id != userId) return HttpNotFound(new { error = "Book [" + book.Id + "] cannot be found in User [" + userId + "]" });
+                return new ObjectResult(book);
+            }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        [HttpPut("users/{userId}/[controller]/{bookId}")]
-        public IActionResult Put(int userId, [FromBody] Book book, [FromHeader] string authorization)
+        [HttpPut("{bookId}")]
+        public IActionResult Put(int userId, int bookId, [FromBody] Book book, [FromHeader] string authorization)
+        {
+            try
+            {
+                if (book == null) return HttpBadRequest(new { error = "Book object not provided" });
+                if (book.Id != bookId) return HttpBadRequest(new { error = "Invalid Book.Id [" + book.Id + "]" });
+                User user = GetUser(userId, authorization);
+                Book bookToUpdate = Repo.FindBook(book.Id);
+                if (bookToUpdate == null || bookToUpdate.User.Id != userId) return HttpNotFound(new { error = "Book [" + book.Id + "] cannot be found in User [" + userId + "]" });
+                Repo.UpdateBook(book);
+                return new NoContentResult();
+            }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
+        private User GetUser(int userId, string authorization)
         {
             User user = TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) return HttpUnauthorized();
-            Book bookToUpdate = Repo.FindBook(userId, book.Id);
-            if (bookToUpdate == null) return HttpNotFound(new { error = "Book [" + book.Id + "] cannot be found in User [" + userId + "]" });
-            Repo.UpdateBook(userId, book);
-            return new NoContentResult();
+            if (user == null) throw new PiggyBankUserException("Unknown error");
+            return user;
         }
     }
 }

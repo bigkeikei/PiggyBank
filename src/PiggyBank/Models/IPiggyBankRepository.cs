@@ -16,7 +16,12 @@ namespace PiggyBank.Models
 
         // Book Maintenance
         Book CreateBook(User user, Book book);
-        Book FindBook(int userId, int bookId);
-        Book UpdateBook(int userId, Book book);
+        Book FindBook(int bookId);
+        Book UpdateBook(Book book);
+
+        // Account Maintenance
+        Account CreateAccount(Book book, Account account);
+        Account FindAccount(int accountId);
+        Account UpdateAccount(Account account);
     }
 }
