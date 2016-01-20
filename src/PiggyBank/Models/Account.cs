@@ -12,7 +12,9 @@ namespace PiggyBank.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public AccountType Type { get; set; } 
         public bool IsValid { get; set; }
+        public string Currency { get; set; }
 
+        [JsonIgnore]
         public virtual Book Book { get; set; }
     }
 }

@@ -5,6 +5,10 @@ namespace PiggyBank.Models
 {
     public class User
     {
+        public User()
+        {
+            Books = new List<Book>();
+        }
         public int Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -14,6 +18,6 @@ namespace PiggyBank.Models
         [JsonIgnore]
         public virtual UserAuthentication Authentication { get; set; }
         [JsonIgnore]
-        public virtual IEnumerable<Book> Books { get; set; }
+        public virtual ICollection<Book> Books { get; set; }
     }
 }

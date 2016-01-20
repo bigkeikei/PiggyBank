@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using PiggyBank.Models;
-using PiggyBank.Models.Data;
-using Microsoft.AspNet.Authorization;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -19,80 +17,47 @@ namespace PiggyBank.Controllers
         public IPiggyBankRepository Repo { get; set; }
 
         [HttpGet("[controller]")]
-        public IEnumerable<User> Get()
+        public IEnumerable<User> List()
         {
             return Repo.ListUsers();
         }
 
-        [HttpGet("{name}", Name = "GetUser")]
-        public IActionResult Get(string name, [FromHeader] string authorization)
+        [HttpGet("[controller]/{userId}", Name = "GetUser")]
+        public IActionResult Get(int userId, [FromHeader] string authorization)
         {
-            if (!IsAuthorized(name, authorization)) return HttpUnauthorized();
-            return new ObjectResult(Repo.FindUser(name));
+            User user = TokenRequirement.Fulfill(Repo, userId, authorization);
+            if (user == null) return HttpUnauthorized();
+            return new ObjectResult(user);
+        }
+
+        [HttpGet("me")]
+        public IActionResult Get([FromHeader] string authorization)
+        {
+            string token = authorization.Substring(7);
+            User user = Repo.FindUserByToken(token);
+            if (user == null) return HttpUnauthorized();
+            return new ObjectResult(user);
         }
 
         [HttpPost("[controller]")]
         public IActionResult Post([FromBody]User user)
         {
-            if (user == null)
-            {
-                return HttpBadRequest();
-            }
+            if (user == null) return HttpBadRequest();
             User userCreated = Repo.CreateUser(user);
             return CreatedAtRoute("GetUser", new { controller = "users", name = user.Name }, userCreated);
         }
 
-        [HttpPut("{name}")]
-        public IActionResult Put(string name, [FromHeader] string authorization, [FromBody]User user)
+        [HttpPut("[controller]/{userId}")]
+        public IActionResult Put(int userId, [FromHeader] string authorization, [FromBody]User user)
         {
-            if (!IsAuthorized(name, authorization)) return HttpUnauthorized();
-            if (user == null || name != user.Name)
+            User userToUpdate = TokenRequirement.Fulfill(Repo, userId, authorization);
+            if (userToUpdate == null) return HttpUnauthorized();
+            if (userToUpdate.Name != user.Name)
             {
-                return HttpNotFound(new { Error = "user[" + name + "] not found"});
-            }
-            User userToUpdate = Repo.FindUser(name);
-            if (userToUpdate == null || userToUpdate.Id != user.Id)
-            {
-                return HttpBadRequest(new { Error = "user.Id [" + user.Id +"] does not match" });
+                return HttpBadRequest(new { Error = "Updating User.Name is not supported" });
             }
             Repo.UpdateUser(user);
             return new NoContentResult();
-        }
-
-        [HttpGet("{name}/token")]
-        public IActionResult GetToken(string name, [FromQuery] string signature)
-        {
-            User user = Repo.FindUser(name);
-            if (user == null)
-            {
-                return HttpNotFound(new { Error = "user[" + name + "] not found" });
-            }
-            if (signature != user.Authentication.Signature)
-            {
-                return HttpBadRequest(new { Error = "signature[" + signature + "] does not match" });
-            }
-            return new ObjectResult(user.Authentication);
-        }
-
-        [HttpGet("{name}/challenge")]
-        public IActionResult GetChallenge(string name)
-        {
-            User user = Repo.FindUser(name);
-            if (user == null)
-            {
-                return HttpNotFound(new { error = "user[" + name + "] not found" });
-            }
-            UserAuthentication auth = Repo.GenerateAuthentication(user);
-            return new ObjectResult(new { Challenge = auth.Challenge });
-        }
-
-        private bool IsAuthorized(string name, string authorization)
-        {
-            // bypass for development
-            return true;
-
-            User user = Repo.FindUser(name);
-            return !(authorization != null && authorization != "Bearer " + user.Authentication.AccessToken);
         }
     }
 }

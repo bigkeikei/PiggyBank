@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,10 @@ namespace PiggyBank.Models
         public string Name { get; set; }
         public bool IsValid { get; set; }
         public string Currency { get; set; }
-        public virtual IEnumerable<Account> Accounts { get; set; }
+
+        [JsonIgnore]
         public virtual User User { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Account> Accounts { get; set; }
     }
 }

@@ -47,6 +47,7 @@ namespace PiggyBank
             app.UseStaticFiles();
 
             app.UseMvc();
+
         }
 
         // Entry point for the application.
