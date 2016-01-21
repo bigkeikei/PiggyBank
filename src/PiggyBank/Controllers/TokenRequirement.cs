@@ -24,7 +24,7 @@ namespace PiggyBank.Controllers
         public User Fulfill()
         {
             // bypass for testing
-            return _repo.FindUser(_userId);
+            return _repo.UserManager.FindUser(_userId);
 
             /*
             if (_authorization == null) throw new PiggyBankUserException("Authorization not provided");

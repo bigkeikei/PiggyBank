@@ -35,7 +35,7 @@ namespace PiggyBank.Controllers
             try
             {
                 User user = GetUser(userId, authorization);
-                Book bookCreated = Repo.CreateBook(user, book);
+                Book bookCreated = Repo.BookManager.CreateBook(user, book);
                 return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id }, bookCreated);
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
@@ -48,7 +48,7 @@ namespace PiggyBank.Controllers
             try
             {
                 User user = GetUser(userId, authorization);
-                Book book = Repo.FindBook(bookId);
+                Book book = Repo.BookManager.FindBook(bookId);
                 if (book == null || book.User.Id != userId) return HttpNotFound(new { error = "Book [" + book.Id + "] cannot be found in User [" + userId + "]" });
                 return new ObjectResult(book);
             }
@@ -64,9 +64,9 @@ namespace PiggyBank.Controllers
                 if (book == null) return HttpBadRequest(new { error = "Book object not provided" });
                 if (book.Id != bookId) return HttpBadRequest(new { error = "Invalid Book.Id [" + book.Id + "]" });
                 User user = GetUser(userId, authorization);
-                Book bookToUpdate = Repo.FindBook(book.Id);
+                Book bookToUpdate = Repo.BookManager.FindBook(book.Id);
                 if (bookToUpdate == null || bookToUpdate.User.Id != userId) return HttpNotFound(new { error = "Book [" + book.Id + "] cannot be found in User [" + userId + "]" });
-                Repo.UpdateBook(book);
+                Repo.BookManager.UpdateBook(book);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }

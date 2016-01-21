@@ -19,7 +19,7 @@ namespace PiggyBank.Controllers
         [HttpGet("[controller]")]
         public IEnumerable<User> List()
         {
-            return Repo.ListUsers();
+            return Repo.UserManager.ListUsers();
         }
 
         [HttpGet("[controller]/{userId}", Name = "GetUser")]
@@ -39,7 +39,7 @@ namespace PiggyBank.Controllers
             try
             {
                 string token = authorization.Substring(7);
-                User user = Repo.FindUserByToken(token);
+                User user = Repo.UserManager.FindUserByToken(token);
                 if (user == null) return HttpUnauthorized();
                 return new ObjectResult(user);
             }
@@ -52,7 +52,7 @@ namespace PiggyBank.Controllers
             try
             {
                 if (user == null) return HttpBadRequest();
-                User userCreated = Repo.CreateUser(user);
+                User userCreated = Repo.UserManager.CreateUser(user);
                 return CreatedAtRoute("GetUser", new { controller = "users", name = user.Name }, userCreated);
             }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
@@ -64,7 +64,7 @@ namespace PiggyBank.Controllers
             try
             {
                 User userToUpdate = GetUser(userId, authorization);
-                Repo.UpdateUser(user);
+                Repo.UserManager.UpdateUser(user);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }

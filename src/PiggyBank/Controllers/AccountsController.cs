@@ -35,7 +35,7 @@ namespace PiggyBank.Controllers
             try
             {
                 Book book = GetBook(userId, bookId, authorization);
-                Account accountCreated = Repo.CreateAccount(book, account);
+                Account accountCreated = Repo.AccountManager.CreateAccount(book, account);
                 return CreatedAtRoute("GetAccount", new { controller = "accounts", userId = userId, bookId = bookId, accountId = accountCreated.Id }, accountCreated);
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
@@ -48,7 +48,7 @@ namespace PiggyBank.Controllers
         {
             try {
                 Book book = GetBook(userId, bookId, authorization);
-                Account account = Repo.FindAccount(accountId);
+                Account account = Repo.AccountManager.FindAccount(accountId);
                 if (account.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + accountId + "] not found in Book [" + bookId + "]" });
                 return new ObjectResult(account);
             }
@@ -65,9 +65,9 @@ namespace PiggyBank.Controllers
                 if (account == null) return HttpBadRequest(new { error = "Account object not provided" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
                 Book book = GetBook(userId, bookId, authorization);
-                Account accountToUpdate = Repo.FindAccount(account.Id);
+                Account accountToUpdate = Repo.AccountManager.FindAccount(account.Id);
                 if (accountToUpdate == null || accountToUpdate.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + account.Id + "] not found in Book [" + bookId + "]" });
-                Repo.UpdateAccount(account);
+                Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
@@ -79,7 +79,7 @@ namespace PiggyBank.Controllers
         {
             User user = TokenRequirement.Fulfill(Repo, userId, authorization);
             if (user == null) throw new PiggyBankUserException("Unknown error");
-            Book book = Repo.FindBook(bookId);
+            Book book = Repo.BookManager.FindBook(bookId);
             if (book == null || book.User.Id != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
             return book;
         }

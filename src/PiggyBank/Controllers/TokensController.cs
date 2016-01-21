@@ -18,19 +18,19 @@ namespace PiggyBank.Controllers
         [HttpGet("challenge/{username}")]
         public IActionResult GetChallenge(string userName)
         {
-            User user = Repo.FindUserByName(userName);
+            User user = Repo.UserManager.FindUserByName(userName);
             if (user == null)
             {
                 return HttpNotFound(new { error = "User [" + userName + "] not found" });
             }
-            UserAuthentication auth = Repo.GenerateChallenge(user.Id);
+            UserAuthentication auth = Repo.UserManager.GenerateChallenge(user.Id);
             return new ObjectResult(new { Challenge = auth.Challenge });
         }
 
         [HttpGet("token/{username}")]
         public IActionResult GetToken(string userName, [FromQuery] string signature)
         {
-            User user = Repo.FindUserByName(userName);
+            User user = Repo.UserManager.FindUserByName(userName);
             if (user == null)
             {
                 return HttpNotFound(new { Error = "User [" + userName + "] not found" });
@@ -39,7 +39,7 @@ namespace PiggyBank.Controllers
             {
                 return HttpBadRequest(new { Error = "Invalid signature [" + signature + "]" });
             }
-            return new ObjectResult(Repo.GenerateToken(user.Id));
+            return new ObjectResult(Repo.UserManager.GenerateToken(user.Id));
         }
     }
 }

@@ -12,6 +12,7 @@ namespace PiggyBank.Models
         {
             Accounts = new List<Account>();
         }
+
         [PiggyBankEFIgnore]
         public int Id { get; set; }
 
@@ -30,5 +31,9 @@ namespace PiggyBank.Models
         [JsonIgnore]
         [PiggyBankEFIgnore]
         public virtual ICollection<Account> Accounts { get; set; }
+
+        [JsonIgnore]
+        [PiggyBankEFIgnore]
+        public virtual ICollection<Transaction> Transactions { get; set; }
     }
 }
