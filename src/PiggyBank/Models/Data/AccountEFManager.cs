@@ -46,16 +46,16 @@ namespace PiggyBank.Models.Data
             return accountToUpdate;
         }
 
-        public AccountDetail GetAccountDetail(int accountId)
+        public IAccountDetail GetAccountDetail(int accountId)
         {
             Account account = FindAccount(accountId);
             if (account == null || !account.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
             return GetAccountDetail(account);
         }
 
-        public AccountDetail GetAccountDetail(Account account)
+        private AccountEFDetail GetAccountDetail(Account account)
         {
-            return new AccountDetail(
+            return new AccountEFDetail(
                 account, 
                 _dbContext);
         }

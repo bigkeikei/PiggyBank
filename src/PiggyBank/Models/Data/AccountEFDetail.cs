@@ -1,13 +1,11 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using PiggyBank.Models.Data;
 
 namespace PiggyBank.Models
 {
-    public class AccountDetail
+    public class AccountEFDetail : IAccountDetail
     {
         private PiggyBankDbContext _dbContext;
 
@@ -56,7 +54,7 @@ namespace PiggyBank.Models
             }
         }
 
-        public AccountDetail(Account account, PiggyBankDbContext dbContext)
+        public AccountEFDetail(Account account, PiggyBankDbContext dbContext)
         {
             Account = account;
             _dbContext = dbContext;
