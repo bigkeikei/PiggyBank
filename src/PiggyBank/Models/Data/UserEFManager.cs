@@ -17,7 +17,8 @@ namespace PiggyBank.Models.Data
 
         public User CreateUser(User user)
         {
-            if (user == null) return null;
+            if (user == null) throw new PiggyBankDataException("User object is missing");
+            PiggyBankEFUtility.CheckMandatory(user);
             User userCreated = _dbContext.Users.Add(user);
             userCreated.Authentication = new UserAuthentication();
             _dbContext.SaveChanges();
@@ -41,11 +42,12 @@ namespace PiggyBank.Models.Data
 
         public User UpdateUser(User user)
         {
+            if (user == null) throw new PiggyBankDataException("User object is missing");
             User userToUpdate = FindUser(user.Id);
 
             if (userToUpdate == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
             if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
-
+            PiggyBankEFUtility.CheckMandatory(user);
             PiggyBankEFUtility.UpdateModel(userToUpdate, user);
             _dbContext.SaveChanges();
             return userToUpdate;
@@ -59,7 +61,7 @@ namespace PiggyBank.Models.Data
         public UserAuthentication GenerateChallenge(int userId)
         {
             User userToUpdate = FindUser(userId);
-            if (userToUpdate == null) return null;
+            if (userToUpdate == null) throw new PiggyBankDataException("User [" + userId + "] cannot be found");
 
             userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             userToUpdate.Authentication.AccessToken = null;
@@ -72,7 +74,7 @@ namespace PiggyBank.Models.Data
         public UserAuthentication GenerateToken(int userId)
         {
             User userToUpdate = FindUser(userId);
-            if (userToUpdate == null) return null;
+            if (userToUpdate == null) throw new PiggyBankDataException("User [" + userId + "] cannot be found");
 
             userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);

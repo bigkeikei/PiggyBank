@@ -49,7 +49,7 @@ namespace PiggyBank.Controllers
             try {
                 Book book = GetBook(userId, bookId, authorization);
                 Account account = Repo.AccountManager.FindAccount(accountId);
-                if (account.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + accountId + "] not found in Book [" + bookId + "]" });
+                if (account == null || account.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + accountId + "] cannot be found in Book [" + bookId + "]" });
                 return new ObjectResult(account);
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
@@ -62,13 +62,26 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                if (account == null) return HttpBadRequest(new { error = "Account object not provided" });
+                if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
                 Book book = GetBook(userId, bookId, authorization);
-                Account accountToUpdate = Repo.AccountManager.FindAccount(account.Id);
+                Account accountToUpdate = Repo.AccountManager.FindAccount(accountId);
                 if (accountToUpdate == null || accountToUpdate.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + account.Id + "] not found in Book [" + bookId + "]" });
                 Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
+            }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException e) { return HttpNotFound(new { error = e.Message }); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
+        [HttpGet("{accountId}/detail")]
+        public IActionResult GetDetail(int userId, int bookId, int accountId, [FromHeader] string authorization)
+        {
+            try
+            {
+                Book book = GetBook(userId, bookId, authorization);
+                return new ObjectResult(Repo.AccountManager.GetAccountDetail(accountId));
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
             catch (PiggyBankBookException e) { return HttpNotFound(new { error = e.Message }); }

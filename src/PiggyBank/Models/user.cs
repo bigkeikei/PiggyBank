@@ -16,9 +16,11 @@ namespace PiggyBank.Models
         [PiggyBankEFIgnore]
         public int Id { get; set; }
 
+        [PiggyBankEFMandatory]
         [PiggyBankEFIgnore]
         public string Name { get; set; }
 
+        [PiggyBankEFMandatory]
         public string Email { get; set; }
 
         [DefaultValue(true)]

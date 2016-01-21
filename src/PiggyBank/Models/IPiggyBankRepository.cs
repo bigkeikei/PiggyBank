@@ -7,5 +7,6 @@ namespace PiggyBank.Models
         IUserManager UserManager { get; }
         IBookManager BookManager { get; }
         IAccountManager AccountManager { get; }
+        ITransactionManager TransactionManager { get; }
     }
 }
