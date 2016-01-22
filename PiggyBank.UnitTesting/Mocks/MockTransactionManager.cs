@@ -23,7 +23,7 @@ namespace PiggyBank.UnitTesting.Mocks
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
             transaction.Book = book;
-            transaction.Id = _transactionId++;
+            transaction.Id = ++_transactionId;
             PiggyBankUtility.CheckMandatory(transaction);
             book.Transactions.Add(transaction);
             _dbContext.Transactions.Add(transaction);

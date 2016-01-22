@@ -26,7 +26,7 @@ namespace PiggyBank.UnitTesting.Mocks
         public User CreateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
-            user.Id = _userId++;
+            user.Id = ++_userId;
             user.Authentication = new UserAuthentication();
             user.Authentication.Secret = "secret";
             PiggyBankUtility.CheckMandatory(user);

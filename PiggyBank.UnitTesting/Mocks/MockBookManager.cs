@@ -23,7 +23,7 @@ namespace PiggyBank.UnitTesting.Mocks
             if (user == null) throw new PiggyBankDataException("User object is missing");
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             book.User = user;
-            book.Id = _bookId++;
+            book.Id = ++_bookId;
             PiggyBankUtility.CheckMandatory(book);
             user.Books.Add(book);
             _dbContext.Books.Add(book);

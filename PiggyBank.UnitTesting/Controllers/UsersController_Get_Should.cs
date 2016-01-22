@@ -4,12 +4,33 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Xunit;
+
+using PiggyBank.Models;
 using PiggyBank.Controllers;
 using PiggyBank.UnitTesting.Mocks;
 
 namespace PiggyBank.UnitTesting.Controllers
 {
-	
+    
+    public class UsersController_Post_Should
+    {
+        [Fact]
+        public void ReturnUnknownWhenUserHasBeenCreatedSuccessfully()
+        {
+            MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
+            UsersController controller = new UsersController();
+            controller.Repo = repository;
+
+            // create user
+            User user = new User();
+            user.Email = "foo@bar.com";
+            user.Name = "foo";
+            IActionResult result = controller.Post(user);
+
+            Assert.True(result.GetType() == typeof(CreatedAtRouteResult));
+        }
+    }
+
     public class UsersController_Get_Should
     {
 		[Fact]
@@ -18,8 +39,29 @@ namespace PiggyBank.UnitTesting.Controllers
             MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
             UsersController controller = new UsersController();
             controller.Repo = repository;
+
             IActionResult result = controller.Get(1,"");
-            Assert.True(true);
+            Assert.True(result.GetType() == typeof(HttpUnauthorizedResult));
         }
+
+        /*
+        [Fact]
+        public void ReturnHttpUnauthorizedWhenAuthorizationIsMissing()
+        {
+            MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
+            UsersController controller = new UsersController();
+            controller.Repo = repository;
+
+            // create user
+            User user = new User();
+            user.Email = "foo@bar.com";
+            user.Name = "foo";
+            controller.Post(user);
+
+            IActionResult result = controller.Get(1, null);
+            Assert.True(result.GetType() == typeof(HttpUnauthorizedResult));
+        }
+        */
     }
+
 }

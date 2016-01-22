@@ -54,7 +54,7 @@ namespace PiggyBank.Controllers
             {
                 if (user == null) return HttpBadRequest(new { error = "User object missing"});
                 User userCreated = Repo.UserManager.CreateUser(user);
-                return CreatedAtRoute("GetUser", new { controller = "users", name = user.Name }, userCreated);
+                return CreatedAtRoute("GetUser", new { controller = "users", userid = user.Id }, userCreated);
             }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
