@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace PiggyBank.Models.Data
 {
-    public class BookEFManager : IBookManager
+    public class EFBookManager : IBookManager
     {
 
         private PiggyBankDbContext _dbContext;
 
-        public BookEFManager(PiggyBankDbContext dbContext)
+        public EFBookManager(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -20,7 +20,7 @@ namespace PiggyBank.Models.Data
             if (user == null) throw new PiggyBankDataException("User object is missing");
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             book.User = user;
-            PiggyBankEFUtility.CheckMandatory(book);
+            PiggyBankUtility.CheckMandatory(book);
             Book bookCreated = _dbContext.Books.Add(book);
             _dbContext.SaveChanges();
             return bookCreated;
@@ -37,8 +37,8 @@ namespace PiggyBank.Models.Data
 
             Book bookToUpdate = FindBook(book.Id);
             if (bookToUpdate == null) throw new PiggyBankDataException("Book [" + book.Id + "] cannot be found");
-            PiggyBankEFUtility.CheckMandatory(book);
-            PiggyBankEFUtility.UpdateModel(bookToUpdate, book);
+            PiggyBankUtility.CheckMandatory(book);
+            PiggyBankUtility.UpdateModel(bookToUpdate, book);
             _dbContext.SaveChanges();
             return bookToUpdate;
         }

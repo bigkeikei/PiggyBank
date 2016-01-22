@@ -9,13 +9,13 @@ namespace PiggyBank.Models
     public enum AccountType { Capital, Asset, Liability, Income, Expense}
     public class Account
     {
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public int Id { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Name { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         [JsonConverter(typeof(StringEnumConverter))]
         public AccountType Type { get; set; }
 
@@ -23,15 +23,15 @@ namespace PiggyBank.Models
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool IsValid { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Currency { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public virtual Book Book { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         [NotMapped]
         public int DebitSign
         {

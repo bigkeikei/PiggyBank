@@ -13,14 +13,14 @@ namespace PiggyBank.Models
             Books = new List<Book>();
         }
 
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public int Id { get; set; }
 
-        [PiggyBankEFMandatory]
-        [PiggyBankEFIgnore]
+        [PiggyBankMandatory]
+        [PiggyBankIgnore]
         public string Name { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Email { get; set; }
 
         [DefaultValue(true)]
@@ -28,11 +28,11 @@ namespace PiggyBank.Models
         public bool IsActive { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public virtual UserAuthentication Authentication { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public virtual ICollection<Book> Books { get; set; }
     }
 }

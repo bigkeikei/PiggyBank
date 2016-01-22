@@ -23,16 +23,11 @@ namespace PiggyBank.Controllers
 
         public User Fulfill()
         {
-            // bypass for testing
-            return _repo.UserManager.FindUser(_userId);
-
-            /*
-            if (_authorization == null) throw new PiggyBankUserException("Authorization not provided");
-            User user = _repo.FindUser(_userId);
+            //if (_authorization == null) throw new PiggyBankUserException("Authorization not provided");
+            User user = _repo.UserManager.FindUser(_userId);
             if ( user == null ) throw new PiggyBankUserException("User [" + _userId + "] cannot be found");
-            if ( _authorization != "Bearer " + user.Authentication.AccessToken) throw new PiggyBankUserException("Incorrect authorization [" + _authorizaion + "]");
+            //if ( _authorization != "Bearer " + user.Authentication.AccessToken) throw new PiggyBankUserException("Incorrect authorization [" + _authorizaion + "]");
             return user;
-            */
         }
 
         public static User Fulfill(IPiggyBankRepository repo, int userId, string authorization)

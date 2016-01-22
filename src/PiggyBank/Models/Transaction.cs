@@ -8,28 +8,28 @@ namespace PiggyBank.Models
 {
     public class Transaction
     {
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public int Id { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public virtual Account DebitAccount { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public virtual Account CreditAccount { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Currency { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public double Amount { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public double BookAmount { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Description { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public DateTime? TransactionDate { get; set; }
 
         [DefaultValue(true)]
@@ -40,8 +40,8 @@ namespace PiggyBank.Models
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool IsClosed { get; set; }
 
-        [PiggyBankEFMandatory]
-        [PiggyBankEFIgnore]
+        [PiggyBankMandatory]
+        [PiggyBankIgnore]
         [JsonIgnore]
         public virtual Book Book { get; set; }
     }

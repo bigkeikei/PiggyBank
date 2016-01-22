@@ -10,6 +10,6 @@ namespace PiggyBank.Models
         Account CreateAccount(Book book, Account account);
         Account FindAccount(int accountId);
         Account UpdateAccount(Account account);
-        IAccountDetail GetAccountDetail(int accountId);
+        AccountDetail GetAccountDetail(int accountId);
     }
 }

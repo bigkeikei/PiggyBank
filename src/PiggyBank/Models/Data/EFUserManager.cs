@@ -6,11 +6,11 @@ using System.Text;
 
 namespace PiggyBank.Models.Data
 {
-    public class UserEFManager : IUserManager
+    public class EFUserManager : IUserManager
     {
         private PiggyBankDbContext _dbContext;
 
-        public UserEFManager(PiggyBankDbContext dbContext)
+        public EFUserManager(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -18,7 +18,7 @@ namespace PiggyBank.Models.Data
         public User CreateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
-            PiggyBankEFUtility.CheckMandatory(user);
+            PiggyBankUtility.CheckMandatory(user);
             User userCreated = _dbContext.Users.Add(user);
             userCreated.Authentication = new UserAuthentication();
             _dbContext.SaveChanges();
@@ -47,8 +47,8 @@ namespace PiggyBank.Models.Data
 
             if (userToUpdate == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
             if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
-            PiggyBankEFUtility.CheckMandatory(user);
-            PiggyBankEFUtility.UpdateModel(userToUpdate, user);
+            PiggyBankUtility.CheckMandatory(user);
+            PiggyBankUtility.UpdateModel(userToUpdate, user);
             _dbContext.SaveChanges();
             return userToUpdate;
         }

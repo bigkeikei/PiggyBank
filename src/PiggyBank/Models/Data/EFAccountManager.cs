@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace PiggyBank.Models.Data
 {
-    public class AccountEFManager :IAccountManager
+    public class EFAccountManager :IAccountManager
     {
         private PiggyBankDbContext _dbContext;
-        public AccountEFManager(PiggyBankDbContext dbContext)
+        public EFAccountManager(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -18,7 +18,7 @@ namespace PiggyBank.Models.Data
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             account.Book = book;
-            PiggyBankEFUtility.CheckMandatory(account);
+            PiggyBankUtility.CheckMandatory(account);
             Account accountCreated = _dbContext.Accounts.Add(account);
             _dbContext.SaveChanges();
             return accountCreated;
@@ -32,7 +32,7 @@ namespace PiggyBank.Models.Data
         public Account UpdateAccount(Account account)
         {
             if (account == null) throw new PiggyBankDataException("Account object is missing");
-            PiggyBankEFUtility.CheckMandatory(account);
+            PiggyBankUtility.CheckMandatory(account);
             Account accountToUpdate = FindAccount(account.Id);
             if (accountToUpdate == null || !accountToUpdate.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
             if (GetAccountDetail(accountToUpdate).Transactions.Any())
@@ -41,23 +41,26 @@ namespace PiggyBank.Models.Data
                 if (account.Type != accountToUpdate.Type) throw new PiggyBankDataException("Editing Account.Type is not supported for accounts with transactions");
                 if (account.Currency != accountToUpdate.Currency) throw new PiggyBankDataException("Editing Account.Currency is not supported for accounts with transactions");
             }
-            PiggyBankEFUtility.UpdateModel(accountToUpdate, account);
+            PiggyBankUtility.UpdateModel(accountToUpdate, account);
             _dbContext.SaveChanges();
             return accountToUpdate;
         }
 
-        public IAccountDetail GetAccountDetail(int accountId)
+        public AccountDetail GetAccountDetail(int accountId)
         {
             Account account = FindAccount(accountId);
             if (account == null || !account.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
             return GetAccountDetail(account);
         }
 
-        private AccountEFDetail GetAccountDetail(Account account)
+        private AccountDetail GetAccountDetail(Account account)
         {
-            return new AccountEFDetail(
-                account, 
-                _dbContext);
+            return new AccountDetail(
+                account,
+                _dbContext.Transactions.Where(b =>
+                    b.IsValid &&
+                    b.Book.Id == account.Book.Id &&
+                    (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)));
         }
     }
 }

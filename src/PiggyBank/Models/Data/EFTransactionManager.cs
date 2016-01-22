@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace PiggyBank.Models.Data
 {
-    public class TransactionEFManager : ITransactionManager
+    public class EFTransactionManager : ITransactionManager
     {
         private PiggyBankDbContext _dbContext;
 
-        public TransactionEFManager(PiggyBankDbContext dbContext)
+        public EFTransactionManager(PiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -41,7 +41,7 @@ namespace PiggyBank.Models.Data
             // Amount validation
             if (transaction.BookAmount < 0) throw new PiggyBankDataException("Invalid Transaction.Amount [" + transaction.Amount + "]");
 
-            PiggyBankEFUtility.CheckMandatory(transaction);
+            PiggyBankUtility.CheckMandatory(transaction);
             Transaction transactionCreated = _dbContext.Transactions.Add(transaction);
             _dbContext.SaveChanges();
 
@@ -59,8 +59,8 @@ namespace PiggyBank.Models.Data
 
             Transaction transactionToUpdate = FindTransaction(transaction.Id);
             if (transactionToUpdate == null) throw new PiggyBankDataException("Transaction [" + transaction.Id + "] cannot be found");
-            PiggyBankEFUtility.CheckMandatory(transaction);
-            PiggyBankEFUtility.UpdateModel(transactionToUpdate, transaction);
+            PiggyBankUtility.CheckMandatory(transaction);
+            PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
             _dbContext.SaveChanges();
             return transactionToUpdate;
         }

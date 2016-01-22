@@ -14,30 +14,30 @@ namespace PiggyBank.Models
             Transactions = new List<Transaction>();
         }
 
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public int Id { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Name { get; set; }
 
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool IsValid { get; set; }
 
-        [PiggyBankEFMandatory]
+        [PiggyBankMandatory]
         public string Currency { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
-        [PiggyBankEFMandatory]
+        [PiggyBankIgnore]
+        [PiggyBankMandatory]
         public virtual User User { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public virtual ICollection<Account> Accounts { get; set; }
 
         [JsonIgnore]
-        [PiggyBankEFIgnore]
+        [PiggyBankIgnore]
         public virtual ICollection<Transaction> Transactions { get; set; }
     }
 }
