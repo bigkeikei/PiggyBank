@@ -14,7 +14,7 @@ namespace PiggyBank.UnitTesting.Controllers
     public class UsersController_Post_Should
     {
         [Fact]
-        public void ReturnUnknownWhenUserHasBeenCreatedSuccessfully()
+        public void ReturnCreatedAtRouteWhenUserHasBeenCreatedSuccessfully()
         {
             MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
             UsersController controller = new UsersController();
