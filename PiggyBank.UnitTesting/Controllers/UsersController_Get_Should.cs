@@ -11,27 +11,7 @@ using PiggyBank.UnitTesting.Mocks;
 
 namespace PiggyBank.UnitTesting.Controllers
 {
-    
-    public class UsersController_Post_Should
-    {
-        [Fact]
-        public void ReturnUnknownWhenUserHasBeenCreatedSuccessfully()
-        {
-            MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
-            UsersController controller = new UsersController();
-            controller.Repo = repository;
-
-            // create user
-            User user = new User();
-            user.Email = "foo@bar.com";
-            user.Name = "foo";
-            IActionResult result = controller.Post(user);
-
-            Assert.True(result.GetType() == typeof(CreatedAtRouteResult));
-        }
-    }
-
-    public class UsersController_Get_Should
+   public class UsersController_Get_Should
     {
 		[Fact]
 		public void ReturnHttpUnauthorizedWhenIdNotExists()
