@@ -36,17 +36,23 @@ namespace PiggyBank.UnitTesting.Mocks
 
         public User FindUser(int userId)
         {
-            return _dbContext.Users.Where(b => b.Id == userId).First();
+            var q = _dbContext.Users.Where(b => b.Id == userId);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
+            return q.First();
         }
 
-        public User FindUserByName(string name)
+        public User FindUserByName(string userName)
         {
-            return _dbContext.Users.Where(b => b.Name == name).First();
+            var q = _dbContext.Users.Where(b => b.Name == userName);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userName + "] cannot be found");
+            return q.First();
         }
 
-        public User FindUserByToken(string token)
+        public User FindUserByToken(string accessToken)
         {
-            return _dbContext.Users.Where(b => b.Authentication.AccessToken == token).First();
+            var q = _dbContext.Users.Where(b => b.Authentication.AccessToken == accessToken);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User with token [" + accessToken + "] cannot be found");
+            return q.First();
         }
 
         public User UpdateUser(User user)
@@ -54,7 +60,6 @@ namespace PiggyBank.UnitTesting.Mocks
             if (user == null) throw new PiggyBankDataException("User object is missing");
             PiggyBankUtility.CheckMandatory(user);
             User userToUpdate = FindUser(user.Id);
-            if (userToUpdate == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
             PiggyBankUtility.UpdateModel(userToUpdate, user);
             return userToUpdate;
         }
@@ -62,7 +67,6 @@ namespace PiggyBank.UnitTesting.Mocks
         public UserAuthentication GenerateChallenge(int userId)
         {
             User user = FindUser(userId);
-            if (user == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
             user.Authentication.Challenge = user.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             user.Authentication.AccessToken = null;
             user.Authentication.RefreshToken = null;
@@ -73,7 +77,6 @@ namespace PiggyBank.UnitTesting.Mocks
         public UserAuthentication GenerateToken(int userId)
         {
             User user = FindUser(userId);
-            if (user == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
             user.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + user.Name);
             user.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + user.Name);
             user.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);

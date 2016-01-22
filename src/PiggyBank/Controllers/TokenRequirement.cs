@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using PiggyBank.Models;
-using PiggyBank.Controllers.Exceptions;
 
 namespace PiggyBank.Controllers
 {
@@ -25,7 +24,6 @@ namespace PiggyBank.Controllers
         {
             //if (_authorization == null) throw new PiggyBankUserException("Authorization not provided");
             User user = _repo.UserManager.FindUser(_userId);
-            if ( user == null ) throw new PiggyBankUserException("User [" + _userId + "] cannot be found");
             //if ( _authorization != "Bearer " + user.Authentication.AccessToken) throw new PiggyBankUserException("Incorrect authorization [" + _authorizaion + "]");
             return user;
         }

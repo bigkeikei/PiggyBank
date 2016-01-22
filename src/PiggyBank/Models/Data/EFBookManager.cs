@@ -28,7 +28,10 @@ namespace PiggyBank.Models.Data
 
         public Book FindBook(int bookId)
         {
-            return _dbContext.Books.Find(bookId);
+
+            Book book = _dbContext.Books.Find(bookId);
+            if (book == null) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
+            return book;
         }
 
         public Book UpdateBook(Book book)
@@ -36,7 +39,7 @@ namespace PiggyBank.Models.Data
             if (book == null) throw new PiggyBankDataException("Book object is missing");
 
             Book bookToUpdate = FindBook(book.Id);
-            if (bookToUpdate == null) throw new PiggyBankDataException("Book [" + book.Id + "] cannot be found");
+            if (!bookToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Book [" + book.Id + "] cannot be found");
             PiggyBankUtility.CheckMandatory(book);
             PiggyBankUtility.UpdateModel(bookToUpdate, book);
             _dbContext.SaveChanges();

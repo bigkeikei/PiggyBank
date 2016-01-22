@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace PiggyBank.UnitTests
+namespace SampleTest
 {
     [TestClass]
     public class UnitTest1
@@ -9,7 +9,6 @@ namespace PiggyBank.UnitTests
         [TestMethod]
         public void TestMethod1()
         {
-            Assert.IsTrue(true);
         }
     }
 }

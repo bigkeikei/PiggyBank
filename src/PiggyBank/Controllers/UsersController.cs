@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNet.Mvc;
 
-using PiggyBank.Controllers.Exceptions;
 using PiggyBank.Models;
 using PiggyBank.Models.Data;
 
@@ -30,6 +29,7 @@ namespace PiggyBank.Controllers
                 return new ObjectResult(GetUser(userId, authorization));
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -40,9 +40,10 @@ namespace PiggyBank.Controllers
             {
                 string token = authorization.Substring(7);
                 User user = Repo.UserManager.FindUserByToken(token);
-                if (user == null) return HttpUnauthorized();
                 return new ObjectResult(user);
             }
+            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -51,7 +52,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                if (user == null) return HttpBadRequest();
+                if (user == null) return HttpBadRequest(new { error = "User object missing"});
                 User userCreated = Repo.UserManager.CreateUser(user);
                 return CreatedAtRoute("GetUser", new { controller = "users", name = user.Name }, userCreated);
             }
@@ -68,13 +69,13 @@ namespace PiggyBank.Controllers
                 return new NoContentResult();
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
         private User GetUser(int userId, string authorization)
         {
             User user = TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) throw new PiggyBankUserException("Unknown error");
             return user;
         }
     }

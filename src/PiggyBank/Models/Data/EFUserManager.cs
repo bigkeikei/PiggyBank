@@ -27,25 +27,30 @@ namespace PiggyBank.Models.Data
 
         public User FindUser(int userId)
         {
-            return _dbContext.Users.Find(userId);
+            User user = _dbContext.Users.Find(userId);
+            if ( user == null ) throw new PiggyBankDataNotFoundException("User [" + user.Id + "] cannot be found");
+            return user;
         }
 
         public User FindUserByName(string userName)
         {
-            return _dbContext.Users.Where(b => b.Name == userName).First();
+            var q = _dbContext.Users.Where(b => b.Name == userName);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userName + "] cannot be found");
+            return q.First();
         }
 
         public User FindUserByToken(string accessToken)
         {
-            return _dbContext.Users.Where(b => b.Authentication.AccessToken == accessToken).First();
+            var q = _dbContext.Users.Where(b => b.Authentication.AccessToken == accessToken);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User with token [" + accessToken + "] cannot be found");
+            return q.First();
         }
 
         public User UpdateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
             User userToUpdate = FindUser(user.Id);
-
-            if (userToUpdate == null) throw new PiggyBankDataException("User [" + user.Id + "] cannot be found");
+            
             if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
             PiggyBankUtility.CheckMandatory(user);
             PiggyBankUtility.UpdateModel(userToUpdate, user);
@@ -61,8 +66,6 @@ namespace PiggyBank.Models.Data
         public UserAuthentication GenerateChallenge(int userId)
         {
             User userToUpdate = FindUser(userId);
-            if (userToUpdate == null) throw new PiggyBankDataException("User [" + userId + "] cannot be found");
-
             userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             userToUpdate.Authentication.AccessToken = null;
             userToUpdate.Authentication.RefreshToken = null;
@@ -74,8 +77,6 @@ namespace PiggyBank.Models.Data
         public UserAuthentication GenerateToken(int userId)
         {
             User userToUpdate = FindUser(userId);
-            if (userToUpdate == null) throw new PiggyBankDataException("User [" + userId + "] cannot be found");
-
             userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);

@@ -5,15 +5,6 @@ namespace PiggyBank.Models
     public class PiggyBankIgnore : Attribute { }
     public class PiggyBankMandatory : Attribute { }
 
-    public class PiggyBankDataException : Exception
-    {
-        public PiggyBankDataException(string message) : base(message) { }
-    }
-    public class PiggyBankNotImplementedException : Exception
-    {
-        public PiggyBankNotImplementedException(string message) : base(message) { }
-    }
-
     public class PiggyBankUtility
     {
         public static void UpdateModel<T>(T modelToUpdate, T model)

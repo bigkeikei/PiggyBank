@@ -32,7 +32,9 @@ namespace PiggyBank.UnitTesting.Mocks
 
         public Book FindBook(int bookId)
         {
-            return _dbContext.Books.Where(b => b.Id == bookId).First();
+            var q = _dbContext.Books.Where(b => b.Id == bookId);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
+            return q.First();
         }
 
         public Book UpdateBook(Book book)
@@ -40,7 +42,7 @@ namespace PiggyBank.UnitTesting.Mocks
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             PiggyBankUtility.CheckMandatory(book);
             Book bookToUpdate = FindBook(book.Id);
-            if (bookToUpdate == null) throw new PiggyBankDataException("Book [" + book.Id + "] cannot be found");
+            if (!book.IsValid) throw new PiggyBankDataNotFoundException("Book [" + book.Id + "] cannot be found");
             PiggyBankUtility.UpdateModel(bookToUpdate, book);
             return bookToUpdate;
         }

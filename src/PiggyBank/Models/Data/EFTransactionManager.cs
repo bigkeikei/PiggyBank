@@ -50,7 +50,9 @@ namespace PiggyBank.Models.Data
 
         public Transaction FindTransaction(int transactionId)
         {
-            return _dbContext.Transactions.Find(transactionId);
+            Transaction transaction = _dbContext.Transactions.Find(transactionId);
+            if (transaction == null) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
+            return transaction;
         }
 
         public Transaction UpdateTransaction(Transaction transaction)
@@ -58,7 +60,7 @@ namespace PiggyBank.Models.Data
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
             Transaction transactionToUpdate = FindTransaction(transaction.Id);
-            if (transactionToUpdate == null) throw new PiggyBankDataException("Transaction [" + transaction.Id + "] cannot be found");
+            if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
             _dbContext.SaveChanges();

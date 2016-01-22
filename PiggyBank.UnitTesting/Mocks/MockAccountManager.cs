@@ -31,7 +31,9 @@ namespace PiggyBank.UnitTesting.Mocks
 
         public Account FindAccount(int accountId)
         {
-            return _dbContext.Accounts.Where(b => b.Id == accountId).First();
+            var q = _dbContext.Accounts.Where(b => b.Id == accountId);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
+            return q.First();
         }
 
         public Account UpdateAccount(Account account)
@@ -39,7 +41,7 @@ namespace PiggyBank.UnitTesting.Mocks
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             PiggyBankUtility.CheckMandatory(account);
             Account accountToUpdate = FindAccount(account.Id);
-            if (accountToUpdate == null || !accountToUpdate.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
+            if (!accountToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
             PiggyBankUtility.UpdateModel(accountToUpdate, account);
             return accountToUpdate;
         }
@@ -47,7 +49,7 @@ namespace PiggyBank.UnitTesting.Mocks
         public AccountDetail GetAccountDetail(int accountId)
         {
             Account account = FindAccount(accountId);
-            if (account == null || !account.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
+            if (!account.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
             return new AccountDetail(
                 account,
                 _dbContext.Transactions.Where(b =>

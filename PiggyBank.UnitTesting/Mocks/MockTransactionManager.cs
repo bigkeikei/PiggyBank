@@ -32,14 +32,16 @@ namespace PiggyBank.UnitTesting.Mocks
 
         public Transaction FindTransaction(int transactionId)
         {
-            return _dbContext.Transactions.Where(b => b.Id == transactionId).First();
+            var q = _dbContext.Transactions.Where(b => b.Id == transactionId);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
+            return q.First();
         }
 
         public Transaction UpdateTransaction(Transaction transaction)
         {
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
             Transaction transactionToUpdate = FindTransaction(transaction.Id);
-            if (transactionToUpdate == null) throw new PiggyBankDataException("Transaction [" + transaction.Id + "] cannot be found");
+            if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
             return transactionToUpdate;

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 
-using PiggyBank.Controllers.Exceptions;
 using PiggyBank.Models;
 using PiggyBank.Models.Data;
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
@@ -24,15 +23,15 @@ namespace PiggyBank.Controllers
             {
                 Book book = GetBook(userId, bookId, authorization);
                 Transaction transaction = Repo.TransactionManager.FindTransaction(transactionId);
-                if (transaction == null || transaction.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
+                if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpNotFound(new { error = e.Message }); }
+            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        // POST api/values
         [HttpPost]
         public IActionResult Post(int userId, int bookId, [FromBody]Transaction transaction, [FromHeader] string authorization)
         {
@@ -44,11 +43,11 @@ namespace PiggyBank.Controllers
 
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpNotFound(new { error = e.Message }); }
+            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        // PUT api/values/5
         [HttpPut("{transactionId}")]
         public IActionResult Put(int userId, int bookId, int transactionId, [FromBody]Transaction transaction, [FromHeader] string authorization)
         {
@@ -58,12 +57,13 @@ namespace PiggyBank.Controllers
                 if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
                 Book book = GetBook(userId, bookId, authorization);
                 Transaction transactionToUpdate = Repo.TransactionManager.FindTransaction(transactionId);
-                if (transactionToUpdate == null || transactionToUpdate.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
+                if (transactionToUpdate.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
                 Repo.TransactionManager.UpdateTransaction(transaction);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpNotFound(new { error = e.Message }); }
+            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 

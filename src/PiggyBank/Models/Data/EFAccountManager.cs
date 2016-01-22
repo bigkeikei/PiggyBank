@@ -26,7 +26,9 @@ namespace PiggyBank.Models.Data
 
         public Account FindAccount(int accountId)
         {
-            return _dbContext.Accounts.Find(accountId);
+            Account account = _dbContext.Accounts.Find(accountId);
+            if (account == null) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
+            return account;
         }
 
         public Account UpdateAccount(Account account)
@@ -34,7 +36,7 @@ namespace PiggyBank.Models.Data
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             PiggyBankUtility.CheckMandatory(account);
             Account accountToUpdate = FindAccount(account.Id);
-            if (accountToUpdate == null || !accountToUpdate.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
+            if (!accountToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
             if (GetAccountDetail(accountToUpdate).Transactions.Any())
             {
                 if (!account.IsValid) throw new PiggyBankDataException("Editing Account.IsValid is not supported for accounts with transactions");
@@ -49,7 +51,7 @@ namespace PiggyBank.Models.Data
         public AccountDetail GetAccountDetail(int accountId)
         {
             Account account = FindAccount(accountId);
-            if (account == null || !account.IsValid) throw new PiggyBankDataException("Account [" + account.Id + "] cannot be found");
+            if (!account.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
             return GetAccountDetail(account);
         }
 
