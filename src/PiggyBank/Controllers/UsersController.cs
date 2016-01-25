@@ -64,6 +64,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
+                if (user.Id != userId) return HttpUnauthorized();
                 User userToUpdate = GetUser(userId, authorization);
                 Repo.UserManager.UpdateUser(user);
                 return new NoContentResult();

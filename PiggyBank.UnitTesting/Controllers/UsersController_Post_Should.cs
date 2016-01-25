@@ -1,8 +1,4 @@
 ﻿using Microsoft.AspNet.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 using PiggyBank.Controllers;
@@ -14,7 +10,7 @@ namespace PiggyBank.UnitTesting.Controllers
     public class UsersController_Post_Should
     {
         [Fact]
-        public void ReturnCreatedAtRouteWhenUserHasBeenCreatedSuccessfully()
+        public void ReturnCreatedAtRoute_WhenSuccessfull()
         {
             MockPiggyBankRepository repository = new MockPiggyBankRepository(null);
             UsersController controller = new UsersController();
@@ -27,6 +23,9 @@ namespace PiggyBank.UnitTesting.Controllers
             IActionResult result = controller.Post(user);
 
             Assert.True(result.GetType() == typeof(CreatedAtRouteResult));
+            Assert.True(((CreatedAtRouteResult)result).RouteName == "GetUser");
+            Assert.True((string)((CreatedAtRouteResult)result).RouteValues["controller"] == "users");
+            Assert.True((int)((CreatedAtRouteResult)result).RouteValues["userid"] == user.Id);
         }
     }
 
