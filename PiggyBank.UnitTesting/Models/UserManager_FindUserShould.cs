@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 using PiggyBank.Models;
@@ -29,13 +26,11 @@ namespace PiggyBank.UnitTesting.Models
         [Fact]
         public void ReturnUser_WhenUserIdMatch()
         {
-            MockData data = new MockData();
-            data.Users.Add(new User { Id = 1, Name = "Happy Cat" });
-            data.Users.Add(new User { Id = 2, Name = "Skiny Pig" });
-            data.Users.Add(new User { Id = 3, Name = "Silly Dog" });
-            User user = data.Users[1];
-            var mockDbContext = new MockPiggyBankDbContext(data);
+            var mockDbContext = new MockPiggyBankDbContext(MockData.Seed());
             UserManager userManager = new UserManager(mockDbContext);
+
+            var rand = new Random(Guid.NewGuid().GetHashCode());
+            User user = mockDbContext.Data.Users[rand.Next(0, mockDbContext.Data.Users.Count - 1)];
             User found = userManager.FindUser(user.Id);
 
             Assert.True(found.Id == user.Id);
