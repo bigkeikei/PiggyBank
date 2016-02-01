@@ -27,8 +27,8 @@ namespace PiggyBank.Controllers
             {
                 return new ObjectResult(GetUser(userId, authorization));
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -41,8 +41,8 @@ namespace PiggyBank.Controllers
                 User user = Repo.UserManager.FindUserByToken(token);
                 return new ObjectResult(user);
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -68,8 +68,8 @@ namespace PiggyBank.Controllers
                 Repo.UserManager.UpdateUser(user);
                 return new NoContentResult();
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 

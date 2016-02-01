@@ -25,9 +25,9 @@ namespace PiggyBank.Controllers
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -41,9 +41,9 @@ namespace PiggyBank.Controllers
                 return CreatedAtRoute("GetTransaction", new { controller = "transactions", userId = userId, bookId = bookId, transactionId = transactionCreated.Id }, transactionCreated);
 
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -60,9 +60,9 @@ namespace PiggyBank.Controllers
                 Repo.TransactionManager.UpdateTransaction(transaction);
                 return new NoContentResult();
             }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 

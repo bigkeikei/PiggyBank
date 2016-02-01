@@ -23,9 +23,9 @@ namespace PiggyBank.Controllers
             {
                 return new ObjectResult(GetBook(userId, bookId, authorization).Accounts);
             }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
         }
 
         [HttpPost]
@@ -37,9 +37,9 @@ namespace PiggyBank.Controllers
                 Account accountCreated = Repo.AccountManager.CreateAccount(book, account);
                 return CreatedAtRoute("GetAccount", new { controller = "accounts", userId = userId, bookId = bookId, accountId = accountCreated.Id }, accountCreated);
             }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -52,9 +52,9 @@ namespace PiggyBank.Controllers
                 if (account.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + accountId + "] cannot be found in Book [" + bookId + "]" });
                 return new ObjectResult(account);
             }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -71,9 +71,9 @@ namespace PiggyBank.Controllers
                 Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
             }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
@@ -85,9 +85,9 @@ namespace PiggyBank.Controllers
                 Book book = GetBook(userId, bookId, authorization);
                 return new ObjectResult(Repo.AccountManager.GetAccountDetail(accountId));
             }
-            catch (PiggyBankDataNotFoundException e) { return HttpUnauthorized(); }
-            catch (PiggyBankUserException e) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException e) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankUserException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
