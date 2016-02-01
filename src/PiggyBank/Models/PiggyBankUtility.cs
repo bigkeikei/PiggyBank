@@ -26,7 +26,7 @@ namespace PiggyBank.Models
             {
                 if (prop.IsDefined(typeof(PiggyBankMandatory), true))
                 {
-                    if (prop.GetValue(model) == null) throw new PiggyBankDataException( prop.Name + " is missing");
+                    if (prop.GetValue(model) == null) throw new PiggyBankDataException( typeof(T).Name + "." + prop.Name + " is missing");
                 }
             }
         }

@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using PiggyBank.Models.Data;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 

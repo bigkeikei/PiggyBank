@@ -1,44 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-
-using PiggyBank.Models;
-using System;
 using System.Text;
 
-namespace PiggyBank.UnitTesting.Mocks
+namespace PiggyBank.Models
 {
-    public class MockUserManager : IUserManager
+    public class UserManager : IUserManager
     {
-        private MockPiggyBankDbContext _dbContext;
-        private int _userId;
+        private IPiggyBankDbContext _dbContext;
 
-        public MockUserManager(MockPiggyBankDbContext dbContext)
+        public UserManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
-            _userId = 0;
-        }
-        public IEnumerable<User> ListUsers()
-        {
-            return _dbContext.Users;
         }
 
         public User CreateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
-            user.Id = ++_userId;
-            user.Authentication = new UserAuthentication();
-            user.Authentication.Secret = "secret";
             PiggyBankUtility.CheckMandatory(user);
+            user.Authentication = new UserAuthentication();
             _dbContext.Users.Add(user);
+            _dbContext.SaveChanges();
             return user;
         }
 
         public User FindUser(int userId)
         {
-            var q = _dbContext.Users.Where(b => b.Id == userId);
-            if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
-            return q.First();
+            User user = _dbContext.Users.Find(userId);
+            if ( user == null ) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
+            return user;
         }
 
         public User FindUserByName(string userName)
@@ -58,29 +49,39 @@ namespace PiggyBank.UnitTesting.Mocks
         public User UpdateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
-            PiggyBankUtility.CheckMandatory(user);
             User userToUpdate = FindUser(user.Id);
+            
+            if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
+            PiggyBankUtility.CheckMandatory(user);
             PiggyBankUtility.UpdateModel(userToUpdate, user);
+            _dbContext.SaveChanges();
             return userToUpdate;
+        }
+
+        public IEnumerable<User> ListUsers()
+        {
+            return _dbContext.Users;
         }
 
         public UserAuthentication GenerateChallenge(int userId)
         {
-            User user = FindUser(userId);
-            user.Authentication.Challenge = user.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-            user.Authentication.AccessToken = null;
-            user.Authentication.RefreshToken = null;
-            user.Authentication.TokenTimeout = null;
-            return user.Authentication;
+            User userToUpdate = FindUser(userId);
+            userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+            userToUpdate.Authentication.AccessToken = null;
+            userToUpdate.Authentication.RefreshToken = null;
+            userToUpdate.Authentication.TokenTimeout = null;
+            _dbContext.SaveChanges();
+            return userToUpdate.Authentication;
         }
 
         public UserAuthentication GenerateToken(int userId)
         {
-            User user = FindUser(userId);
-            user.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + user.Name);
-            user.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + user.Name);
-            user.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);
-            return user.Authentication;
+            User userToUpdate = FindUser(userId);
+            userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
+            userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
+            userToUpdate.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);
+            _dbContext.SaveChanges();
+            return userToUpdate.Authentication;
         }
 
         private string Hash(string content)

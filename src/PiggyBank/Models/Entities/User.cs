@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-using PiggyBank.Models.Data;
 using System.ComponentModel;
 
 namespace PiggyBank.Models

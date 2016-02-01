@@ -2,8 +2,6 @@
 using System;
 using System.ComponentModel;
 
-using PiggyBank.Models.Data;
-
 namespace PiggyBank.Models
 {
     public class Transaction

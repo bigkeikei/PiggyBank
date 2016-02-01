@@ -3,19 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using PiggyBank.Models;
-
-namespace PiggyBank.UnitTesting.Mocks
+namespace PiggyBank.Models
 {
-    public class MockBookManager : IBookManager
+    public class BookManager : IBookManager
     {
-        private MockPiggyBankDbContext _dbContext;
-        private int _bookId;
 
-        public MockBookManager(MockPiggyBankDbContext dbContext)
+        private IPiggyBankDbContext _dbContext;
+
+        public BookManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
-            _bookId = 0;
         }
 
         public Book CreateBook(User user, Book book)
@@ -23,27 +20,29 @@ namespace PiggyBank.UnitTesting.Mocks
             if (user == null) throw new PiggyBankDataException("User object is missing");
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             book.User = user;
-            book.Id = ++_bookId;
             PiggyBankUtility.CheckMandatory(book);
-            user.Books.Add(book);
             _dbContext.Books.Add(book);
+            _dbContext.SaveChanges();
             return book;
         }
 
         public Book FindBook(int bookId)
         {
-            var q = _dbContext.Books.Where(b => b.Id == bookId);
-            if (!q.Any()) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
-            return q.First();
+
+            Book book = _dbContext.Books.Find(bookId);
+            if (book == null) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
+            return book;
         }
 
         public Book UpdateBook(Book book)
         {
             if (book == null) throw new PiggyBankDataException("Book object is missing");
-            PiggyBankUtility.CheckMandatory(book);
+
             Book bookToUpdate = FindBook(book.Id);
-            if (!book.IsValid) throw new PiggyBankDataNotFoundException("Book [" + book.Id + "] cannot be found");
+            if (!bookToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Book [" + book.Id + "] cannot be found");
+            PiggyBankUtility.CheckMandatory(book);
             PiggyBankUtility.UpdateModel(bookToUpdate, book);
+            _dbContext.SaveChanges();
             return bookToUpdate;
         }
     }

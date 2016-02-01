@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PiggyBank.Models.Data
+namespace PiggyBank.Models
 {
-    public class EFTransactionManager : ITransactionManager
+    public class TransactionManager : ITransactionManager
     {
-        private PiggyBankDbContext _dbContext;
+        private IPiggyBankDbContext _dbContext;
 
-        public EFTransactionManager(PiggyBankDbContext dbContext)
+        public TransactionManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -42,10 +42,10 @@ namespace PiggyBank.Models.Data
             if (transaction.BookAmount < 0) throw new PiggyBankDataException("Invalid Transaction.Amount [" + transaction.Amount + "]");
 
             PiggyBankUtility.CheckMandatory(transaction);
-            Transaction transactionCreated = _dbContext.Transactions.Add(transaction);
+            _dbContext.Transactions.Add(transaction);
             _dbContext.SaveChanges();
 
-            return transactionCreated;
+            return transaction;
         }
 
         public Transaction FindTransaction(int transactionId)

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PiggyBank.Models.Data
+namespace PiggyBank.Models
 {
-    public class EFAccountManager :IAccountManager
+    public class AccountManager :IAccountManager
     {
-        private PiggyBankDbContext _dbContext;
-        public EFAccountManager(PiggyBankDbContext dbContext)
+        private IPiggyBankDbContext _dbContext;
+        public AccountManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -19,9 +19,9 @@ namespace PiggyBank.Models.Data
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             account.Book = book;
             PiggyBankUtility.CheckMandatory(account);
-            Account accountCreated = _dbContext.Accounts.Add(account);
+            _dbContext.Accounts.Add(account);
             _dbContext.SaveChanges();
-            return accountCreated;
+            return account;
         }
 
         public Account FindAccount(int accountId)
