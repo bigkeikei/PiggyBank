@@ -14,6 +14,7 @@ namespace PiggyBank.Models
         User FindUserByToken(string accessToken);
         User UpdateUser(User user);
         UserAuthentication GenerateChallenge(int userId);
-        UserAuthentication GenerateToken(int userId);
+        UserAuthentication GenerateToken(int userId, string signature);
+        User CheckAccessToken(int userId, string accessToken);
     }
 }

@@ -14,10 +14,13 @@ namespace PiggyBank.Models
         public int Id { get; set; }
 
         [JsonIgnore]
+        public string Secret { get; set; }
+
+        [JsonIgnore]
         public string Challenge { get; set; }
 
         [JsonIgnore]
-        public string Secret { get; set; }
+        public DateTime? ChallengeTimeout { get; set; }
 
         public string AccessToken { get; set; }
 
@@ -28,6 +31,7 @@ namespace PiggyBank.Models
         [JsonIgnore]
         public virtual User User { get; set; }
 
+        // for unit testing purpose
         [JsonIgnore]
         public string Signature
         {

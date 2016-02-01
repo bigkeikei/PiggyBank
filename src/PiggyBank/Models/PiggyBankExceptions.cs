@@ -26,6 +26,10 @@ namespace PiggyBank.Models
     {
         public PiggyBankDataNotFoundException(string message) : base(message) { }
     }
+    public class PiggyBankAuthenticationTimeoutException : Exception
+    {
+        public PiggyBankAuthenticationTimeoutException(string message) : base(message) { }
+    }
     public class PiggyBankNotImplementedException : Exception
     {
         public PiggyBankNotImplementedException(string message) : base(message) { }

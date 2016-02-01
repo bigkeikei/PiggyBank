@@ -67,21 +67,34 @@ namespace PiggyBank.Models
         {
             User userToUpdate = FindUser(userId);
             userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-            userToUpdate.Authentication.AccessToken = null;
-            userToUpdate.Authentication.RefreshToken = null;
-            userToUpdate.Authentication.TokenTimeout = null;
+            userToUpdate.Authentication.ChallengeTimeout = System.DateTime.Now.AddSeconds(60);
+
             _dbContext.SaveChanges();
             return userToUpdate.Authentication;
         }
 
-        public UserAuthentication GenerateToken(int userId)
+        public UserAuthentication GenerateToken(int userId, string signature)
         {
             User userToUpdate = FindUser(userId);
+            UserAuthentication auth = userToUpdate.Authentication;
+            MD5 md5 = MD5.Create();
+            string authSign = Convert.ToBase64String(md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(auth.Challenge + auth.Secret)));
+            if (authSign != signature) { throw new PiggyBankDataException("Invalid signature [" + signature + "]"); }
+            if (DateTime.Now >= auth.ChallengeTimeout) { throw new PiggyBankAuthenticationTimeoutException("Challenge expired"); }
+
             userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);
             _dbContext.SaveChanges();
             return userToUpdate.Authentication;
+        }
+
+        public User CheckAccessToken(int userId, string accessToken)
+        {
+            User user = FindUser(userId);
+            if (user.Authentication.AccessToken != accessToken) { throw new PiggyBankDataException("Invalid token [" + accessToken + "]"); }
+            if (DateTime.Now >= user.Authentication.TokenTimeout) { throw new PiggyBankAuthenticationTimeoutException("Token expired"); }
+            return user;
         }
 
         private string Hash(string content)

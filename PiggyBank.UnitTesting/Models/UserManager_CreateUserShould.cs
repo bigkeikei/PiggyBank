@@ -11,7 +11,7 @@ using PiggyBank.UnitTesting.Mocks;
 
 namespace PiggyBank.UnitTesting.Models
 {
-    public class UserManager_CreateUser_Should
+    public class UserManager_CreateUserShould
     {
         [Fact]
         public void ThrowDataException_WhenUserNotProvided()
