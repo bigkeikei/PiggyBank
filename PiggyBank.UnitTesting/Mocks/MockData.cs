@@ -22,9 +22,9 @@ namespace PiggyBank.UnitTesting.Mocks
         public static MockData Seed()
         {
             MockData data = new MockData();
-            data.Users.Add(new User { Id = 1, Name = "Happy Cat" });
-            data.Users.Add(new User { Id = 2, Name = "Skiny Pig" });
-            data.Users.Add(new User { Id = 3, Name = "Silly Dog" });
+            data.Users.Add(new User { Id = 1, Name = "Happy Cat", Email = "cat@happy.com", IsActive = true });
+            data.Users.Add(new User { Id = 2, Name = "Skiny Pig", Email = "pig@skiny.com", IsActive = true });
+            data.Users.Add(new User { Id = 3, Name = "Silly Dog", Email = "dog@silly.com", IsActive = true });
             data.Users[0].Authentication = new UserAuthentication { Id = data.Users[0].Id, User = data.Users[0], AccessToken = "A" };
             data.Users[1].Authentication = new UserAuthentication { Id = data.Users[1].Id, User = data.Users[1], AccessToken = "B" };
             data.Users[2].Authentication = new UserAuthentication { Id = data.Users[2].Id, User = data.Users[2], AccessToken = "C" };

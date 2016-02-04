@@ -12,28 +12,32 @@ namespace PiggyBank.UnitTesting.Mocks
         public MockPiggyBankDbContext()
         {
             Data = new MockData();
-            Users = GetMockDbSet(Data.Users).Object;
-            Books = GetMockDbSet(Data.Books).Object;
-            Accounts = GetMockDbSet(Data.Accounts).Object;
-            Transactions = GetMockDbSet(Data.Transactions).Object;
+            Init();
         }
 
         public MockPiggyBankDbContext(MockData data)
         {
             Data = data;
+            Init();
+        }
+
+        private void Init()
+        {
             Users = GetMockDbSet(Data.Users).Object;
             Books = GetMockDbSet(Data.Books).Object;
             Accounts = GetMockDbSet(Data.Accounts).Object;
             Transactions = GetMockDbSet(Data.Transactions).Object;
+            SaveCount = 0;
         }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-        public int SaveChanges() { return 1; }
-
+        public int SaveChanges() { SaveCount++; return 1; }
         public MockData Data { get; }
+        public int SaveCount { get; private set; }
+
 
         private Mock<DbSet<T>> GetMockDbSet<T>(List<T> entities) where T : class
         {
