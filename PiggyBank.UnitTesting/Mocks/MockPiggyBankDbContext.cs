@@ -60,6 +60,7 @@ namespace PiggyBank.UnitTesting.Mocks
                 entities.Add(t);
                 return t;
             });
+            /*
             mockSet.Setup(m => m.Find(It.IsAny<object[]>())).Returns((object[] arg) =>
             {
                 if (arg == null || arg.Length != 1) return null;
@@ -76,6 +77,7 @@ namespace PiggyBank.UnitTesting.Mocks
                 int id = (int)arg[0];
                 return Task.FromResult(entities.FirstOrDefault(b => (int)prop.GetValue(b) == id));
             });
+            */
             return mockSet;
         }
     }

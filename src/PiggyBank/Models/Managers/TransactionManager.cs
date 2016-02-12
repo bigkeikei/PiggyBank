@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,8 +21,9 @@ namespace PiggyBank.Models
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
             transaction.Book = book;
-            transaction.DebitAccount = await _dbContext.Accounts.FindAsync(transaction.DebitAccount.Id);
-            transaction.CreditAccount = await _dbContext.Accounts.FindAsync(transaction.CreditAccount.Id);
+            AccountManager acc = new AccountManager(_dbContext);
+            transaction.DebitAccount = await acc.FindAccount(transaction.DebitAccount.Id);
+            transaction.CreditAccount = await acc.FindAccount(transaction.CreditAccount.Id);
 
             // DR/CR account validation
             if (transaction.DebitAccount == null || !transaction.DebitAccount.IsValid) throw new PiggyBankDataException("Invalid Debit Account[" + transaction.DebitAccount.Id + "]");
@@ -51,8 +53,11 @@ namespace PiggyBank.Models
         public async Task<Transaction> FindTransaction(int transactionId)
         {
             Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
-            if (transaction == null) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
-            return transaction;
+            var q = await (from b in _dbContext.Transactions
+                           where b.Id == transactionId
+                           select b).ToListAsync();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
+            return q.First();
         }
 
         public async Task<Transaction> UpdateTransaction(Transaction transaction)

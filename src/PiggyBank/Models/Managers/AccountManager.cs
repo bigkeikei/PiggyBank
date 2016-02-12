@@ -36,8 +36,11 @@ namespace PiggyBank.Models
         public async Task<Account> FindAccount(int accountId)
         {
             Account account = await _dbContext.Accounts.FindAsync(accountId);
-            if (account == null) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
-            return account;
+            var q = await (from b in _dbContext.Accounts
+                           where b.Id == accountId
+                           select b).ToListAsync();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
+            return q.First();
         }
 
         public async Task<Account> UpdateAccount(Account account)

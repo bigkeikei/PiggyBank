@@ -36,10 +36,11 @@ namespace PiggyBank.Models
 
         public async Task<Book> FindBook(int bookId)
         {
-
-            Book book = await _dbContext.Books.FindAsync(bookId);
-            if (book == null) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
-            return book;
+            var q = await (from b in _dbContext.Books
+                           where b.Id == bookId
+                           select b).ToListAsync();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
+            return q.First();
         }
 
         public async Task<Book> UpdateBook(Book book)

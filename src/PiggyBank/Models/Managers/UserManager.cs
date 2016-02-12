@@ -29,9 +29,11 @@ namespace PiggyBank.Models
 
         public async Task<User> FindUser(int userId)
         {
-            User user = await _dbContext.Users.FindAsync(userId);
-            if ( user == null ) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
-            return user;
+            var q = await (from b in _dbContext.Users
+                           where b.Id == userId
+                           select b).ToListAsync();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
+            return q.First();
         }
 
         public async Task<User> FindUserByName(string userName)
