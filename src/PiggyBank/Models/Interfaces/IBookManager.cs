@@ -7,8 +7,9 @@ namespace PiggyBank.Models
 {
     public interface IBookManager
     {
-        Book CreateBook(User user, Book book);
-        Book FindBook(int bookId);
-        Book UpdateBook(Book book);
+        Task<IEnumerable<Book>> ListBooks(User user);
+        Task<Book> CreateBook(User user, Book book);
+        Task<Book> FindBook(int bookId);
+        Task<Book> UpdateBook(Book book);
     }
 }

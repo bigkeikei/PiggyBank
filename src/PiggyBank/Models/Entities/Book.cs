@@ -2,17 +2,12 @@
 using System.Collections.Generic;
 
 using System.ComponentModel;
+using System.Linq;
 
 namespace PiggyBank.Models
 {
     public class Book
     {
-        public Book()
-        {
-            Accounts = new List<Account>();
-            Transactions = new List<Transaction>();
-        }
-
         [PiggyBankIgnore]
         public int Id { get; set; }
 

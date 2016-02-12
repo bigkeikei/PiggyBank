@@ -2,6 +2,7 @@
 using Microsoft.AspNet.Mvc;
 
 using PiggyBank.Models;
+using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,17 +16,17 @@ namespace PiggyBank.Controllers
         public IPiggyBankRepository Repo { get; set; }
 
         [HttpGet("[controller]")]
-        public IEnumerable<User> List()
+        public async Task<IEnumerable<User>> List()
         {
-            return Repo.UserManager.ListUsers();
+            return await Repo.UserManager.ListUsers();
         }
 
         [HttpGet("[controller]/{userId}", Name = "GetUser")]
-        public IActionResult Get(int userId, [FromHeader] string authorization)
+        public async Task<IActionResult> Get(int userId, [FromHeader] string authorization)
         {
             try
             {
-                return new ObjectResult(GetUser(userId, authorization));
+                return new ObjectResult(await GetUser(userId, authorization));
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
@@ -33,13 +34,12 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("me")]
-        public IActionResult Get([FromHeader] string authorization)
+        public async Task<IActionResult> Get([FromHeader] string authorization)
         {
             try
             {
                 string token = authorization.Substring(7);
-                User user = Repo.UserManager.FindUserByToken(token);
-                return new ObjectResult(user);
+                return new ObjectResult(await Repo.UserManager.FindUserByToken(token));
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
@@ -47,25 +47,25 @@ namespace PiggyBank.Controllers
         }
 
         [HttpPost("[controller]")]
-        public IActionResult Post([FromBody]User user)
+        public async Task<IActionResult> Post([FromBody]User user)
         {
             try
             {
                 if (user == null) return HttpBadRequest(new { error = "User object missing"});
-                User userCreated = Repo.UserManager.CreateUser(user);
+                User userCreated = await Repo.UserManager.CreateUser(user);
                 return CreatedAtRoute("GetUser", new { controller = "users", userid = user.Id }, userCreated);
             }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
         [HttpPut("[controller]/{userId}")]
-        public IActionResult Put(int userId, [FromHeader] string authorization, [FromBody]User user)
+        public async Task<IActionResult> Put(int userId, [FromHeader] string authorization, [FromBody]User user)
         {
             try
             {
                 if (user.Id != userId) return HttpUnauthorized();
-                User userToUpdate = GetUser(userId, authorization);
-                Repo.UserManager.UpdateUser(user);
+                await GetUser(userId, authorization);
+                await Repo.UserManager.UpdateUser(user);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
@@ -73,9 +73,9 @@ namespace PiggyBank.Controllers
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        private User GetUser(int userId, string authorization)
+        private async Task<User> GetUser(int userId, string authorization)
         {
-            User user = TokenRequirement.Fulfill(Repo, userId, authorization);
+            User user = await TokenRequirement.Fulfill(Repo, userId, authorization);
             return user;
         }
     }

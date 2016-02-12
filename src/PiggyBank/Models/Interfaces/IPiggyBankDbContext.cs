@@ -1,5 +1,6 @@
 ﻿
 using System.Data.Entity;
+using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
@@ -11,5 +12,6 @@ namespace PiggyBank.Models
         DbSet<Transaction> Transactions { get; set; }
 
         int SaveChanges();
+        Task<int> SaveChangesAsync();
     }
 }

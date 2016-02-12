@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
     public interface IUserManager
     {
-        IEnumerable<User> ListUsers();
-        User CreateUser(User user);
-        User FindUser(int userId);
-        User FindUserByName(string userName);
-        User FindUserByToken(string accessToken);
-        User UpdateUser(User user);
-        UserAuthentication GenerateChallenge(int userId);
-        UserAuthentication GenerateToken(int userId, string signature);
-        User CheckAccessToken(int userId, string accessToken);
+        Task<IEnumerable<User>> ListUsers();
+        Task<User> CreateUser(User user);
+        Task<User> FindUser(int userId);
+        Task<User> FindUserByName(string userName);
+        Task<User> FindUserByToken(string accessToken);
+        Task<User> UpdateUser(User user);
+        Task<UserAuthentication> GenerateChallenge(int userId);
+        Task<UserAuthentication> GenerateToken(int userId, string signature);
+        Task<User> CheckAccessToken(int userId, string accessToken);
     }
 }

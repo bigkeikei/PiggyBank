@@ -14,14 +14,14 @@ namespace PiggyBank.UnitTesting.Models
     public class UserManager_CreateUserShould
     {
         [Fact]
-        public void ThrowDataException_WhenUserNotProvided()
+        public async void ThrowDataException_WhenUserNotProvided()
         {
             Exception ex = null;
             try
             {
                 var mockDbContext = new MockPiggyBankDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
-                userManager.CreateUser(null);
+                await userManager.CreateUser(null);
             }
             catch (PiggyBankDataException e) { ex = e; }
 
@@ -29,7 +29,7 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public void ThrowDataException_WhenMandatoryElementIsMissing()
+        public async void ThrowDataException_WhenMandatoryElementIsMissing()
         {
             Exception ex = null;
             try
@@ -37,7 +37,7 @@ namespace PiggyBank.UnitTesting.Models
                 var mockDbContext = new MockPiggyBankDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
 
-                userManager.CreateUser(new User());
+                await userManager.CreateUser(new User());
             }
             catch (PiggyBankDataException e) { ex = e; }
 
@@ -45,7 +45,7 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public void ReturnUser_WhenSucessful()
+        public async void ReturnUser_WhenSucessful()
         {
             var mockDbContext = new MockPiggyBankDbContext();
             UserManager userManager = new UserManager(mockDbContext);
@@ -54,7 +54,7 @@ namespace PiggyBank.UnitTesting.Models
             user.Name = "foo";
             user.Email = "foo@bar.com";
 
-            var createdUser = userManager.CreateUser(user);
+            var createdUser = await userManager.CreateUser(user);
 
             Assert.True(createdUser.Name == user.Name);
             Assert.True(createdUser.Email == user.Email);

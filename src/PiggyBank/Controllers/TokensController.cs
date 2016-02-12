@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 
 using PiggyBank.Models;
@@ -17,24 +14,24 @@ namespace PiggyBank.Controllers
         public IPiggyBankRepository Repo { get; set; }
 
         [HttpGet("challenge/{username}")]
-        public IActionResult GetChallenge(string userName)
+        public async Task<IActionResult> GetChallenge(string userName)
         {
             try
             {
-                User user = Repo.UserManager.FindUserByName(userName);
-                UserAuthentication auth = Repo.UserManager.GenerateChallenge(user.Id);
+                User user = await Repo.UserManager.FindUserByName(userName);
+                UserAuthentication auth = await Repo.UserManager.GenerateChallenge(user.Id);
                 return new ObjectResult(new { Challenge = auth.Challenge });
             }
             catch (PiggyBankDataNotFoundException e) { return HttpNotFound(new { error = e.Message }); }
         }
 
         [HttpGet("token/{username}")]
-        public IActionResult GetToken(string userName, [FromQuery] string signature)
+        public async Task<IActionResult> GetToken(string userName, [FromQuery] string signature)
         {
             try
             {
-                User user = Repo.UserManager.FindUserByName(userName);
-                return new ObjectResult(Repo.UserManager.GenerateToken(user.Id, signature));
+                User user = await Repo.UserManager.FindUserByName(userName);
+                return new ObjectResult(await Repo.UserManager.GenerateToken(user.Id, signature));
 
             }
             catch (PiggyBankAuthenticationTimeoutException e) { return HttpBadRequest(new { error = e.Message }); }

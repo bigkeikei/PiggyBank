@@ -20,23 +20,23 @@ namespace PiggyBank.Controllers
             _authorization = authorization;
         }
 
-        public User Fulfill()
+        public async Task<User> Fulfill()
         {
             try
             {
                 if (_authorization == null) { throw new PiggyBankUserException("Authorization not provided"); }
                 if (!_authorization.StartsWith("Bearer ")) { throw new PiggyBankUserException("Invalid authorization"); }
-                User user = _repo.UserManager.FindUser(_userId);
-                return _repo.UserManager.CheckAccessToken(_userId, _authorization.Substring(7));
+                //User user = await _repo.UserManager.FindUser(_userId);
+                return await _repo.UserManager.CheckAccessToken(_userId, _authorization.Substring(7));
             }
             catch (PiggyBankAuthenticationTimeoutException e) { throw new PiggyBankUserException(e.Message); }
             catch (PiggyBankDataException e) { throw new PiggyBankUserException(e.Message); }
         }
 
-        public static User Fulfill(IPiggyBankRepository repo, int userId, string authorization)
+        public static async Task<User> Fulfill(IPiggyBankRepository repo, int userId, string authorization)
         {
             TokenRequirement requirement = new TokenRequirement(repo, userId, authorization);
-            return requirement.Fulfill();
+            return await requirement.Fulfill();
         }
     }
 }

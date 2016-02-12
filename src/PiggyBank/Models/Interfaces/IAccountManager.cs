@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
     public interface IAccountManager
     {
-        Account CreateAccount(Book book, Account account);
-        Account FindAccount(int accountId);
-        Account UpdateAccount(Account account);
-        AccountDetail GetAccountDetail(int accountId);
+        Task<IEnumerable<Account>> ListAccounts(Book book);
+        Task<Account> CreateAccount(Book book, Account account);
+        Task<Account> FindAccount(int accountId);
+        Task<Account> UpdateAccount(Account account);
+        Task<AccountDetail> GetAccountDetail(int accountId);
     }
 }

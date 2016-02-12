@@ -4,6 +4,8 @@ using System.Data.Entity;
 using System.Linq;
 
 using PiggyBank.Models;
+using System.Threading.Tasks;
+using System.Data.Entity.Infrastructure;
 
 namespace PiggyBank.UnitTesting.Mocks
 {
@@ -35,14 +37,22 @@ namespace PiggyBank.UnitTesting.Mocks
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public int SaveChanges() { SaveCount++; return 1; }
+        public Task<int> SaveChangesAsync() { return Task.FromResult(SaveChanges()); }
         public MockData Data { get; }
         public int SaveCount { get; private set; }
-
 
         private Mock<DbSet<T>> GetMockDbSet<T>(List<T> entities) where T : class
         {
             var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(entities.AsQueryable().Provider);
+
+            mockSet.As<IDbAsyncEnumerable<T>>()
+                .Setup(m => m.GetAsyncEnumerator())
+                .Returns(new MockDbAsyncEnumerator<T>(entities.GetEnumerator()));
+
+            mockSet.As<IQueryable<T>>()
+                .Setup(m => m.Provider)
+                .Returns(new MockDbAsyncQueryProvider<T>(entities.AsQueryable().Provider));
+
             mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(entities.AsQueryable().Expression);
             mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(entities.AsQueryable().ElementType);
             mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(entities.AsQueryable().GetEnumerator());
@@ -57,6 +67,14 @@ namespace PiggyBank.UnitTesting.Mocks
                 if (prop == null || prop.PropertyType != typeof(int)) return null;
                 int id = (int)arg[0];
                 return entities.FirstOrDefault(b => (int)prop.GetValue(b) == id);
+            });
+            mockSet.Setup(m => m.FindAsync(It.IsAny<object[]>())).Returns((object[] arg) =>
+            {
+                if (arg == null || arg.Length != 1) return null;
+                var prop = typeof(T).GetProperties().FirstOrDefault(p => p.Name.ToLower() == "id");
+                if (prop == null || prop.PropertyType != typeof(int)) return null;
+                int id = (int)arg[0];
+                return Task.FromResult(entities.FirstOrDefault(b => (int)prop.GetValue(b) == id));
             });
             return mockSet;
         }

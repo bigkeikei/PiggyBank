@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
     public interface ITransactionManager
     {
-        Transaction CreateTransaction(Book book, Transaction transaction);
-        Transaction FindTransaction(int transactionId);
-        Transaction UpdateTransaction(Transaction transaction);
+        Task<Transaction> CreateTransaction(Book book, Transaction transaction);
+        Task<Transaction> FindTransaction(int transactionId);
+        Task<Transaction> UpdateTransaction(Transaction transaction);
     }
 }

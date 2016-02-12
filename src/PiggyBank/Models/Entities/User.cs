@@ -1,17 +1,12 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
-
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace PiggyBank.Models
 {
     public class User
     {
-        public User()
-        {
-            Books = new List<Book>();
-        }
-
         [PiggyBankIgnore]
         public int Id { get; set; }
 

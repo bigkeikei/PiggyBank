@@ -33,6 +33,7 @@ namespace PiggyBank.Models
 
         // for unit testing purpose
         [JsonIgnore]
+        [NotMapped]
         public string Signature
         {
             get

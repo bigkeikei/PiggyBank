@@ -14,14 +14,14 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public Transaction CreateTransaction(Book book, Transaction transaction)
+        public async Task<Transaction> CreateTransaction(Book book, Transaction transaction)
         {
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
             transaction.Book = book;
-            transaction.DebitAccount = _dbContext.Accounts.Find(transaction.DebitAccount.Id);
-            transaction.CreditAccount = _dbContext.Accounts.Find(transaction.CreditAccount.Id);
+            transaction.DebitAccount = await _dbContext.Accounts.FindAsync(transaction.DebitAccount.Id);
+            transaction.CreditAccount = await _dbContext.Accounts.FindAsync(transaction.CreditAccount.Id);
 
             // DR/CR account validation
             if (transaction.DebitAccount == null || !transaction.DebitAccount.IsValid) throw new PiggyBankDataException("Invalid Debit Account[" + transaction.DebitAccount.Id + "]");
@@ -43,27 +43,27 @@ namespace PiggyBank.Models
 
             PiggyBankUtility.CheckMandatory(transaction);
             _dbContext.Transactions.Add(transaction);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             return transaction;
         }
 
-        public Transaction FindTransaction(int transactionId)
+        public async Task<Transaction> FindTransaction(int transactionId)
         {
-            Transaction transaction = _dbContext.Transactions.Find(transactionId);
+            Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
             if (transaction == null) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
             return transaction;
         }
 
-        public Transaction UpdateTransaction(Transaction transaction)
+        public async Task<Transaction> UpdateTransaction(Transaction transaction)
         {
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
-            Transaction transactionToUpdate = FindTransaction(transaction.Id);
+            Transaction transactionToUpdate = await FindTransaction(transaction.Id);
             if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return transactionToUpdate;
         }
     }

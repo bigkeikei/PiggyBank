@@ -6,7 +6,7 @@ using PiggyBank.UnitTesting.Mocks;
 
 namespace PiggyBank.UnitTesting.Models
 {
-    public class UserManager_FindUserShould
+    public class UserManager_GenerateChallengeShould
     {
         [Fact]
         public async void ThrowDataNotFoundException_WhenUserNotFound()
@@ -16,7 +16,7 @@ namespace PiggyBank.UnitTesting.Models
             {
                 var mockDbContext = new MockPiggyBankDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
-                await userManager.FindUser(1);
+                await userManager.GenerateChallenge(1);
             }
             catch (PiggyBankDataNotFoundException e) { ex = e; }
 
@@ -24,17 +24,22 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public async void ReturnUser_WhenUserIdMatch()
+        public async void ReturnAuthentication_WhenSuccessful()
         {
             var mockDbContext = new MockPiggyBankDbContext(MockData.Seed());
             UserManager userManager = new UserManager(mockDbContext);
 
             var rand = new Random(Guid.NewGuid().GetHashCode());
             User user = mockDbContext.Data.Users[rand.Next(0, mockDbContext.Data.Users.Count - 1)];
-            User found = await userManager.FindUser(user.Id);
+            UserAuthentication oldAuth = new UserAuthentication();
+            oldAuth.Challenge = user.Authentication.Challenge;
+            oldAuth.ChallengeTimeout = user.Authentication.ChallengeTimeout;
+            UserAuthentication newAuth = await userManager.GenerateChallenge(user.Id);
 
-            Assert.True(found.Id == user.Id);
-            Assert.True(found.Name == user.Name);
+            Assert.NotEqual(oldAuth.Challenge, newAuth.Challenge);
+            Assert.NotEqual(oldAuth.ChallengeTimeout, newAuth.ChallengeTimeout);
+            Assert.True(newAuth.Challenge != null);
+            Assert.True(newAuth.ChallengeTimeout != null);
         }
     }
 }

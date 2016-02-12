@@ -11,14 +11,14 @@ namespace PiggyBank.UnitTesting.Models
     public class UserManager_UpdateUserShould
     {
         [Fact]
-        public void ThrowException_WhenUserNotProvided()
+        public async void ThrowException_WhenUserNotProvided()
         {
             Exception ex = null;
             try
             {
                 var mockDbContext = new MockPiggyBankDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
-                userManager.UpdateUser(null);
+                await userManager.UpdateUser(null);
             }
             catch (PiggyBankDataException e) { ex = e; }
 
@@ -26,7 +26,7 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public void ThrowException_WhenEditingUserName()
+        public async void ThrowException_WhenEditingUserName()
         {
             Exception ex = null;
             try
@@ -42,7 +42,7 @@ namespace PiggyBank.UnitTesting.Models
                 modifiedUser.Email = user.Email;
                 modifiedUser.Name = user.Name + " with some changes";
 
-                userManager.UpdateUser(modifiedUser);
+                await userManager.UpdateUser(modifiedUser);
             }
             catch (PiggyBankDataException e) { ex = e; }
 
@@ -50,7 +50,7 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public void ThrowException_WhenMandatoryElementIsMissing()
+        public async void ThrowException_WhenMandatoryElementIsMissing()
         {
             Exception ex = null;
             try
@@ -65,7 +65,7 @@ namespace PiggyBank.UnitTesting.Models
                 modifiedUser.IsActive = user.IsActive;
                 modifiedUser.Name = user.Name;
 
-                userManager.UpdateUser(modifiedUser);
+                await userManager.UpdateUser(modifiedUser);
             }
             catch (PiggyBankDataException e) { ex = e; }
 
@@ -73,7 +73,7 @@ namespace PiggyBank.UnitTesting.Models
         }
 
         [Fact]
-        public void ReturnUser_WhenSuccessful()
+        public async void ReturnUser_WhenSuccessful()
         {
             var mockDbContext = new MockPiggyBankDbContext(MockData.Seed());
             UserManager userManager = new UserManager(mockDbContext);
@@ -86,7 +86,7 @@ namespace PiggyBank.UnitTesting.Models
             modifiedUser.Email = "someone@newemail.com";
             modifiedUser.Name = user.Name;
 
-            user = userManager.UpdateUser(modifiedUser);
+            user = await userManager.UpdateUser(modifiedUser);
 
             Assert.Equal(1, mockDbContext.SaveCount);
             Assert.True(user.Id == modifiedUser.Id);

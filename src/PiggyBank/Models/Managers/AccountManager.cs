@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
-    public class AccountManager :IAccountManager
+    public class AccountManager : IAccountManager
     {
         private IPiggyBankDbContext _dbContext;
         public AccountManager(IPiggyBankDbContext dbContext)
@@ -13,31 +14,40 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public Account CreateAccount(Book book, Account account)
+        public async Task<IEnumerable<Account>> ListAccounts(Book book)
+        {
+            var accounts = await (from b in _dbContext.Accounts
+                            where b.Book.Id == book.Id
+                            select b).ToListAsync();
+            return accounts;
+        }
+
+        public async Task<Account> CreateAccount(Book book, Account account)
         {
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             account.Book = book;
             PiggyBankUtility.CheckMandatory(account);
             _dbContext.Accounts.Add(account);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return account;
         }
 
-        public Account FindAccount(int accountId)
+        public async Task<Account> FindAccount(int accountId)
         {
-            Account account = _dbContext.Accounts.Find(accountId);
+            Account account = await _dbContext.Accounts.FindAsync(accountId);
             if (account == null) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
             return account;
         }
 
-        public Account UpdateAccount(Account account)
+        public async Task<Account> UpdateAccount(Account account)
         {
             if (account == null) throw new PiggyBankDataException("Account object is missing");
             PiggyBankUtility.CheckMandatory(account);
-            Account accountToUpdate = FindAccount(account.Id);
+            Account accountToUpdate = await FindAccount(account.Id);
             if (!accountToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
-            if (GetAccountDetail(accountToUpdate).Transactions.Any())
+
+            if ((await GetTransactions(account).AnyAsync()))
             {
                 if (!account.IsValid) throw new PiggyBankDataException("Editing Account.IsValid is not supported for accounts with transactions");
                 if (account.Type != accountToUpdate.Type) throw new PiggyBankDataException("Editing Account.Type is not supported for accounts with transactions");
@@ -48,21 +58,26 @@ namespace PiggyBank.Models
             return accountToUpdate;
         }
 
-        public AccountDetail GetAccountDetail(int accountId)
+        public async Task<AccountDetail> GetAccountDetail(int accountId)
         {
-            Account account = FindAccount(accountId);
+            Account account = await FindAccount(accountId);
             if (!account.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
-            return GetAccountDetail(account);
+
+            double balance = await GetTransactions(account).SumAsync(
+                b => (b.DebitAccount.Id == accountId ? 1 : -1) * account.DebitSign * b.Amount);
+            double bookBalance = await GetTransactions(account).SumAsync(
+                b => (b.DebitAccount.Id == accountId ? 1 : -1) * account.DebitSign * b.BookAmount);
+
+            return new AccountDetail(account, balance, bookBalance);
         }
 
-        private AccountDetail GetAccountDetail(Account account)
+        private IQueryable<Transaction> GetTransactions(Account account)
         {
-            return new AccountDetail(
-                account,
-                _dbContext.Transactions.Where(b =>
-                    b.IsValid &&
+            return (from b in _dbContext.Transactions
+                    where b.IsValid &&
                     b.Book.Id == account.Book.Id &&
-                    (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)));
+                    (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)
+                    select b);
         }
     }
 }

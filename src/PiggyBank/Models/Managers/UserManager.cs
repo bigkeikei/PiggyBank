@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
@@ -15,67 +17,71 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public User CreateUser(User user)
+        public async Task<User> CreateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
             PiggyBankUtility.CheckMandatory(user);
             user.Authentication = new UserAuthentication();
             _dbContext.Users.Add(user);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return user;
         }
 
-        public User FindUser(int userId)
+        public async Task<User> FindUser(int userId)
         {
-            User user = _dbContext.Users.Find(userId);
+            User user = await _dbContext.Users.FindAsync(userId);
             if ( user == null ) throw new PiggyBankDataNotFoundException("User [" + userId + "] cannot be found");
             return user;
         }
 
-        public User FindUserByName(string userName)
+        public async Task<User> FindUserByName(string userName)
         {
-            var q = _dbContext.Users.Where(b => b.Name == userName);
+            var q = await (from b in _dbContext.Users
+                           where b.Name == userName
+                           select b).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("User [" + userName + "] cannot be found");
             return q.First();
         }
 
-        public User FindUserByToken(string accessToken)
+        public async Task<User> FindUserByToken(string accessToken)
         {
-            var q = _dbContext.Users.Where(b => b.Authentication.AccessToken == accessToken);
+            var q = await (from b in _dbContext.Users
+                           where b.Authentication.AccessToken == accessToken
+                           select b).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("User with token [" + accessToken + "] cannot be found");
             return q.First();
         }
 
-        public User UpdateUser(User user)
+        public async Task<User> UpdateUser(User user)
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
-            User userToUpdate = FindUser(user.Id);
+            User userToUpdate = await FindUser(user.Id);
             
             if (userToUpdate.Name != user.Name) throw new PiggyBankDataException("Editing User.Name is not supported");
             PiggyBankUtility.CheckMandatory(user);
             PiggyBankUtility.UpdateModel(userToUpdate, user);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return userToUpdate;
         }
 
-        public IEnumerable<User> ListUsers()
+        public async Task<IEnumerable<User>> ListUsers()
         {
-            return _dbContext.Users;
+            return await _dbContext.Users.ToListAsync();
         }
 
-        public UserAuthentication GenerateChallenge(int userId)
+        public async Task<UserAuthentication> GenerateChallenge(int userId)
         {
-            User userToUpdate = FindUser(userId);
+            User userToUpdate = await FindUser(userId);
             userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             userToUpdate.Authentication.ChallengeTimeout = System.DateTime.Now.AddSeconds(60);
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return userToUpdate.Authentication;
         }
 
-        public UserAuthentication GenerateToken(int userId, string signature)
+        public async Task<UserAuthentication> GenerateToken(int userId, string signature)
         {
-            User userToUpdate = FindUser(userId);
+            User userToUpdate = await FindUser(userId);
             UserAuthentication auth = userToUpdate.Authentication;
             MD5 md5 = MD5.Create();
             string authSign = Convert.ToBase64String(md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(auth.Challenge + auth.Secret)));
@@ -85,13 +91,13 @@ namespace PiggyBank.Models
             userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
             userToUpdate.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             return userToUpdate.Authentication;
         }
 
-        public User CheckAccessToken(int userId, string accessToken)
+        public async Task<User> CheckAccessToken(int userId, string accessToken)
         {
-            User user = FindUser(userId);
+            User user = await FindUser(userId);
             if (user.Authentication.AccessToken != accessToken) { throw new PiggyBankDataException("Invalid token [" + accessToken + "]"); }
             if (DateTime.Now >= user.Authentication.TokenTimeout) { throw new PiggyBankAuthenticationTimeoutException("Token expired"); }
             return user;
