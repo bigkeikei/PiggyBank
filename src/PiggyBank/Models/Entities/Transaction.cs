@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PiggyBank.Models
 {
@@ -37,6 +38,10 @@ namespace PiggyBank.Models
         [DefaultValue(false)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool IsClosed { get; set; }
+
+        [PiggyBankMandatory]
+        [ConcurrencyCheck]
+        public DateTime? TimeStamp { get; set; }
 
         [PiggyBankMandatory]
         [PiggyBankIgnoreWhenUpdate]

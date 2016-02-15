@@ -25,7 +25,7 @@ namespace PiggyBank.Models
         public double? BookAmount { get; set; }
 
         [ConcurrencyCheck]
-        public DateTime? Timestamp { get; set; }
+        public DateTime? TimeStamp { get; set; }
 
         [JsonIgnore]
         public virtual Account Account { get; set; }

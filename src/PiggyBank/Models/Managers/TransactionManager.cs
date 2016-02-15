@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,6 +18,8 @@ namespace PiggyBank.Models
 
         public async Task<Transaction> CreateTransaction(Book book, Transaction transaction)
         {
+            DateTime timeStamp = DateTime.Now;
+
             if (book == null) throw new PiggyBankDataException("Book object is missing");
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
@@ -43,6 +46,8 @@ namespace PiggyBank.Models
             // Amount validation
             if (transaction.BookAmount < 0) throw new PiggyBankDataException("Invalid Transaction.Amount [" + transaction.Amount + "]");
 
+            transaction.TimeStamp = timeStamp;
+
             PiggyBankUtility.CheckMandatory(transaction);
             _dbContext.Transactions.Add(transaction);
             await _dbContext.SaveChangesAsync();
@@ -62,13 +67,21 @@ namespace PiggyBank.Models
 
         public async Task<Transaction> UpdateTransaction(Transaction transaction)
         {
+            DateTime timeStamp = DateTime.Now;
             if (transaction == null) throw new PiggyBankDataException("Transaction object is missing");
 
             Transaction transactionToUpdate = await FindTransaction(transaction.Id);
             if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
+            if (transaction.TimeStamp != transactionToUpdate.TimeStamp) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] is being updated by other process");
+            transaction.TimeStamp = timeStamp;
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] is being updated by other process"); }
+
             return transactionToUpdate;
         }
     }
