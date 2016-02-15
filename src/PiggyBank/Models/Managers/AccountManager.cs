@@ -79,13 +79,19 @@ namespace PiggyBank.Models
                 bookAmount += account.Closing.BookAmount ?? 0;
             }
 
-            var q = (from b in GetTransactions(account)
-                     where !b.IsClosed
-                     select b);
-            if (await q.AnyAsync())
+            var q = await (from b in GetTransactions(account)
+                           where !b.IsClosed
+                           group b by 0 into g
+                           select new
+                           {
+                               Amount = g.Sum(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.Amount),
+                               BookAmount = g.Sum(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.BookAmount)
+                           }).ToListAsync();
+            if (q.Any())
             {
-                amount += await q.SumAsync(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.Amount);
-                bookAmount += await q.SumAsync(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.BookAmount);
+                var result = q.First();
+                amount += result.Amount;
+                bookAmount += result.BookAmount;
             }
             
             return new AccountDetail(account, amount, bookAmount);
