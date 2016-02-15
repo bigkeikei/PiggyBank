@@ -72,7 +72,7 @@ namespace PiggyBank.Models
 
             Transaction transactionToUpdate = await FindTransaction(transaction.Id);
             if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
-            if (transaction.TimeStamp != transactionToUpdate.TimeStamp) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] is being updated by other process");
+            if (transaction.TimeStamp != transactionToUpdate.TimeStamp) throw new PiggyBankDataConcurrencyException("Transaction [" + transaction.Id + "] is being updated by other process");
             transaction.TimeStamp = timeStamp;
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
@@ -80,7 +80,7 @@ namespace PiggyBank.Models
             {
                 await _dbContext.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] is being updated by other process"); }
+            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataConcurrencyException("Transaction [" + transaction.Id + "] is being updated by other process"); }
 
             return transactionToUpdate;
         }

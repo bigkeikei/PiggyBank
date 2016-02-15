@@ -77,7 +77,7 @@ namespace PiggyBank.Models
             {
                 await _dbContext.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataException("Closing has already been running in another process"); }
+            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataConcurrencyException("Closing has already been run by another process"); }
         }
 
         private void UpdateAccountClosing(Transaction transaction, Account account, int debitSign, DateTime closingDate, DateTime timestamp)
