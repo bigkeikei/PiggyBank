@@ -8,7 +8,7 @@ namespace PiggyBank.Models
     public enum AccountType { Capital, Asset, Liability, Income, Expense}
     public class Account
     {
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public int Id { get; set; }
 
         [PiggyBankMandatory]
@@ -26,11 +26,11 @@ namespace PiggyBank.Models
         public string Currency { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public virtual Book Book { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         [NotMapped]
         public int DebitSign
         {
@@ -50,5 +50,9 @@ namespace PiggyBank.Models
                 }
             }
         }
+
+        [JsonIgnore]
+        [PiggyBankIgnoreWhenUpdate]
+        public virtual AccountClosing Closing { get; set; }
     }
 }

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 
 namespace PiggyBank.Models
 {
@@ -53,6 +55,44 @@ namespace PiggyBank.Models
             PiggyBankUtility.UpdateModel(bookToUpdate, book);
             await _dbContext.SaveChangesAsync();
             return bookToUpdate;
+        }
+
+        public async Task CloseBook(int bookId, DateTime closingDate)
+        {
+            var q = (from b in _dbContext.Transactions
+                     where !b.IsClosed &&
+                     b.IsValid &&
+                     b.Book.Id == bookId &&
+                     b.TransactionDate <= closingDate
+                     select b);
+            List<Transaction> transactions = await q.ToListAsync();
+            foreach(Transaction t in transactions)
+            {
+                t.IsClosed = true;
+                if (t.DebitAccount.Closing == null)
+                {
+                    t.DebitAccount.Closing = new AccountClosing();
+                    t.DebitAccount.Closing.Account = t.DebitAccount;
+                    t.DebitAccount.Closing.Id = t.DebitAccount.Id;
+                }
+                if (t.CreditAccount.Closing == null)
+                {
+                    t.CreditAccount.Closing = new AccountClosing();
+                    t.CreditAccount.Closing.Account = t.CreditAccount;
+                    t.CreditAccount.Closing.Id = t.CreditAccount.Id;
+                }
+                t.DebitAccount.Closing.Amount += t.DebitAccount.DebitSign * t.Amount;
+                t.DebitAccount.Closing.BookAmount += t.DebitAccount.DebitSign * t.BookAmount;
+                t.CreditAccount.Closing.Amount -= t.CreditAccount.DebitSign * t.Amount;
+                t.CreditAccount.Closing.BookAmount -= t.CreditAccount.DebitSign * t.BookAmount;
+                t.DebitAccount.Closing.ClosingDate = closingDate;
+                t.CreditAccount.Closing.ClosingDate = closingDate;
+            }
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) { throw new PiggyBankDataException("Closing has already been running in another process"); }
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,7 +36,6 @@ namespace PiggyBank.Models
 
         public async Task<Account> FindAccount(int accountId)
         {
-            Account account = await _dbContext.Accounts.FindAsync(accountId);
             var q = await (from b in _dbContext.Accounts
                            where b.Id == accountId
                            select b).ToListAsync();
@@ -64,21 +64,39 @@ namespace PiggyBank.Models
         public async Task<AccountDetail> GetAccountDetail(int accountId)
         {
             Account account = await FindAccount(accountId);
+            return await GetAccountDetail(account);
+        }
+
+        private async Task<AccountDetail> GetAccountDetail(Account account)
+        {
             if (!account.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
 
-            double balance = await GetTransactions(account).SumAsync(
-                b => (b.DebitAccount.Id == accountId ? 1 : -1) * account.DebitSign * b.Amount);
-            double bookBalance = await GetTransactions(account).SumAsync(
-                b => (b.DebitAccount.Id == accountId ? 1 : -1) * account.DebitSign * b.BookAmount);
+            double amount = 0, bookAmount = 0;
 
-            return new AccountDetail(account, balance, bookBalance);
+            if (account.Closing != null)
+            {
+                amount += account.Closing.Amount ?? 0;
+                bookAmount += account.Closing.BookAmount ?? 0;
+            }
+
+            var q = (from b in GetTransactions(account)
+                     where !b.IsClosed
+                     select b);
+            if (await q.AnyAsync())
+            {
+                amount += await q.SumAsync(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.Amount);
+                bookAmount += await q.SumAsync(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.BookAmount);
+            }
+            
+            return new AccountDetail(account, amount, bookAmount);
         }
 
         private IQueryable<Transaction> GetTransactions(Account account)
         {
+            int bookId = account.Book.Id;
             return (from b in _dbContext.Transactions
                     where b.IsValid &&
-                    b.Book.Id == account.Book.Id &&
+                    b.Book.Id == bookId &&
                     (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)
                     select b);
         }

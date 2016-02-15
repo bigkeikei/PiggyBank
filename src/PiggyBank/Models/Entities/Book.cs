@@ -8,7 +8,7 @@ namespace PiggyBank.Models
 {
     public class Book
     {
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public int Id { get; set; }
 
         [PiggyBankMandatory]
@@ -22,16 +22,16 @@ namespace PiggyBank.Models
         public string Currency { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         [PiggyBankMandatory]
         public virtual User User { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public virtual ICollection<Account> Accounts { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public virtual ICollection<Transaction> Transactions { get; set; }
     }
 }

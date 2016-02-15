@@ -2,7 +2,7 @@
 
 namespace PiggyBank.Models
 {
-    public class PiggyBankIgnore : Attribute { }
+    public class PiggyBankIgnoreWhenUpdate : Attribute { }
     public class PiggyBankMandatory : Attribute { }
 
     public class PiggyBankUtility
@@ -12,7 +12,7 @@ namespace PiggyBank.Models
             var props = typeof(T).GetProperties();
             foreach (var prop in props)
             {
-                if (!prop.IsDefined(typeof(PiggyBankIgnore), true))
+                if (!prop.IsDefined(typeof(PiggyBankIgnoreWhenUpdate), true))
                 {
                     prop.SetValue(modelToUpdate, prop.GetValue(model));
                 }

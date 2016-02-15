@@ -6,7 +6,7 @@ namespace PiggyBank.Models
 {
     public class Transaction
     {
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public int Id { get; set; }
 
         [PiggyBankMandatory]
@@ -39,7 +39,7 @@ namespace PiggyBank.Models
         public bool IsClosed { get; set; }
 
         [PiggyBankMandatory]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         [JsonIgnore]
         public virtual Book Book { get; set; }
     }

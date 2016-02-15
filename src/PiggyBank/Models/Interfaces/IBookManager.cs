@@ -11,5 +11,6 @@ namespace PiggyBank.Models
         Task<Book> CreateBook(User user, Book book);
         Task<Book> FindBook(int bookId);
         Task<Book> UpdateBook(Book book);
+        Task CloseBook(int bookId, DateTime closingDate);
     }
 }

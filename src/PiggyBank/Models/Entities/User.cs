@@ -7,11 +7,11 @@ namespace PiggyBank.Models
 {
     public class User
     {
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public int Id { get; set; }
 
         [PiggyBankMandatory]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public string Name { get; set; }
 
         [PiggyBankMandatory]
@@ -22,11 +22,11 @@ namespace PiggyBank.Models
         public bool IsActive { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public virtual UserAuthentication Authentication { get; set; }
 
         [JsonIgnore]
-        [PiggyBankIgnore]
+        [PiggyBankIgnoreWhenUpdate]
         public virtual ICollection<Book> Books { get; set; }
     }
 }
