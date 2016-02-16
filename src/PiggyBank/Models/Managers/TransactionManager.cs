@@ -27,27 +27,8 @@ namespace PiggyBank.Models
             AccountManager acc = new AccountManager(_dbContext);
             transaction.DebitAccount = await acc.FindAccount(transaction.DebitAccount.Id);
             transaction.CreditAccount = await acc.FindAccount(transaction.CreditAccount.Id);
-
-            // DR/CR account validation
-            if (transaction.DebitAccount == null || !transaction.DebitAccount.IsValid) throw new PiggyBankDataException("Invalid Debit Account[" + transaction.DebitAccount.Id + "]");
-            if (transaction.CreditAccount == null || !transaction.CreditAccount.IsValid) throw new PiggyBankDataException("Invalid Credit Account[" + transaction.CreditAccount.Id + "]");
-
-            // Book validation
-            if (transaction.DebitAccount.Book.Id != book.Id) throw new PiggyBankDataException("Debit Account[" + transaction.DebitAccount.Id + "] cannot be found in Book [" + book.Id +"]");
-            if (transaction.CreditAccount.Book.Id != book.Id) throw new PiggyBankDataException("Credit Account[" + transaction.CreditAccount.Id + "] cannot be found in Book [" + book.Id + "]");
-            
-            // Currency validation
-            if (transaction.DebitAccount.Currency != transaction.Currency && transaction.DebitAccount.Currency != book.Currency) throw new PiggyBankDataException("Invalid DebitAccount.Currency[" + transaction.DebitAccount.Currency + "]");
-            if (transaction.CreditAccount.Currency != transaction.Currency && transaction.CreditAccount.Currency != book.Currency) throw new PiggyBankDataException("Invalid CreditAccount.Currency[" + transaction.CreditAccount.Currency + "]");
-
-            // Book amount validation
-            if (transaction.BookAmount <= 0) throw new PiggyBankDataException("Invalid Transaction.BookAmount [" + transaction.BookAmount + "]");
-
-            // Amount validation
-            if (transaction.BookAmount < 0) throw new PiggyBankDataException("Invalid Transaction.Amount [" + transaction.Amount + "]");
-
+            ValidateTransaction(transaction);
             transaction.TimeStamp = timeStamp;
-
             PiggyBankUtility.CheckMandatory(transaction);
             _dbContext.Transactions.Add(transaction);
             await _dbContext.SaveChangesAsync();
@@ -72,7 +53,14 @@ namespace PiggyBank.Models
 
             Transaction transactionToUpdate = await FindTransaction(transaction.Id);
             if (!transactionToUpdate.IsValid) throw new PiggyBankDataNotFoundException("Transaction [" + transaction.Id + "] cannot be found");
+            if (transactionToUpdate.IsClosed) throw new PiggyBankDataException("Closed Transaction cannot be created / updated");
             if (transaction.TimeStamp != transactionToUpdate.TimeStamp) throw new PiggyBankDataConcurrencyException("Transaction [" + transaction.Id + "] is being updated by other process");
+
+            transaction.Book = transactionToUpdate.Book;
+            AccountManager acc = new AccountManager(_dbContext);
+            transaction.DebitAccount = await acc.FindAccount(transaction.DebitAccount.Id);
+            transaction.CreditAccount = await acc.FindAccount(transaction.CreditAccount.Id);
+            ValidateTransaction(transaction);
             transaction.TimeStamp = timeStamp;
             PiggyBankUtility.CheckMandatory(transaction);
             PiggyBankUtility.UpdateModel(transactionToUpdate, transaction);
@@ -83,6 +71,34 @@ namespace PiggyBank.Models
             catch (DbUpdateConcurrencyException) { throw new PiggyBankDataConcurrencyException("Transaction [" + transaction.Id + "] is being updated by other process"); }
 
             return transactionToUpdate;
+        }
+
+        private void ValidateTransaction(Transaction transaction)
+        {
+            int bookId = transaction.Book.Id;
+            string bookCurrency = transaction.Book.Currency;
+
+            // DR/CR account validation
+            if (transaction.DebitAccount == null || !transaction.DebitAccount.IsValid) throw new PiggyBankDataException("Invalid Debit Account[" + transaction.DebitAccount.Id + "]");
+            if (transaction.CreditAccount == null || !transaction.CreditAccount.IsValid) throw new PiggyBankDataException("Invalid Credit Account[" + transaction.CreditAccount.Id + "]");
+
+            // Book validation
+            if (transaction.DebitAccount.Book.Id != bookId) throw new PiggyBankDataException("Debit Account[" + transaction.DebitAccount.Id + "] cannot be found in Book [" + bookId + "]");
+            if (transaction.CreditAccount.Book.Id != bookId) throw new PiggyBankDataException("Credit Account[" + transaction.CreditAccount.Id + "] cannot be found in Book [" + bookId + "]");
+
+            // Currency validation
+            if (transaction.DebitAccount.Currency != transaction.Currency && transaction.DebitAccount.Currency != bookCurrency) throw new PiggyBankDataException("Invalid DebitAccount.Currency[" + transaction.DebitAccount.Currency + "]");
+            if (transaction.CreditAccount.Currency != transaction.Currency && transaction.CreditAccount.Currency != bookCurrency) throw new PiggyBankDataException("Invalid CreditAccount.Currency[" + transaction.CreditAccount.Currency + "]");
+
+            // Book amount validation
+            if (transaction.BookAmount <= 0) throw new PiggyBankDataException("Invalid Transaction.BookAmount [" + transaction.BookAmount + "]");
+
+            // Amount validation
+            if (transaction.BookAmount < 0) throw new PiggyBankDataException("Invalid Transaction.Amount [" + transaction.Amount + "]");
+
+            // IsClosed validation
+            if (transaction.IsClosed) throw new PiggyBankDataException("Closed Transaction cannot be created / updated");
+
         }
     }
 }

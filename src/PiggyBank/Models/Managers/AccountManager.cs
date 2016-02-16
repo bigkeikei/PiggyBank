@@ -72,6 +72,7 @@ namespace PiggyBank.Models
             if (!account.IsValid) throw new PiggyBankDataNotFoundException("Account [" + account.Id + "] cannot be found");
 
             double amount = 0, bookAmount = 0;
+            int noOfTransactions = 0;
 
             if (account.Closing != null)
             {
@@ -79,32 +80,40 @@ namespace PiggyBank.Models
                 bookAmount += account.Closing.BookAmount ?? 0;
             }
 
-            var q = await (from b in GetTransactions(account)
-                           where !b.IsClosed
-                           group b by 0 into g
+            var q = await (from b in 
+                               (from b in GetTransactions(account)
+                                select new
+                                {
+                                    Amount = (b.DebitAccount.Id == account.Id ? 1 : -1) * (b.IsClosed ? 0 : 1) * account.DebitSign * b.Amount,
+                                    BookAmount = (b.DebitAccount.Id == account.Id ? 1 : -1) * (b.IsClosed ? 0 : 1) * account.DebitSign * b.BookAmount,
+                                    Group = 1
+                                })
+                           group b by b.Group into g
                            select new
                            {
-                               Amount = g.Sum(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.Amount),
-                               BookAmount = g.Sum(x => (x.DebitAccount.Id == account.Id ? 1 : -1) * account.DebitSign * x.BookAmount)
+                               Amount = g.Sum(x => x.Amount),
+                               BookAmount = g.Sum(x => x.BookAmount),
+                               NoOfTransactions = g.Count()
                            }).ToListAsync();
             if (q.Any())
             {
                 var result = q.First();
                 amount += result.Amount;
                 bookAmount += result.BookAmount;
+                noOfTransactions += result.NoOfTransactions;
             }
-            
-            return new AccountDetail(account, amount, bookAmount);
+
+            return new AccountDetail(account, amount, bookAmount, noOfTransactions);
         }
 
         private IQueryable<Transaction> GetTransactions(Account account)
         {
             int bookId = account.Book.Id;
-            return (from b in _dbContext.Transactions
-                    where b.IsValid &&
-                    b.Book.Id == bookId &&
-                    (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)
-                    select b);
+            return from b in _dbContext.Transactions
+                   where b.IsValid &&
+                   b.Book.Id == bookId &&
+                   (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)
+                   select b;
         }
     }
 }

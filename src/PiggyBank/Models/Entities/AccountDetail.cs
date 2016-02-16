@@ -13,11 +13,14 @@ namespace PiggyBank.Models
 
         public double BookBalance { get; private set; }
 
-        public AccountDetail(Account account, double balance, double bookBalance)
+        public int NoOfTransactions { get; private set; }
+
+        public AccountDetail(Account account, double balance, double bookBalance, int noOfTransactions)
         {
             Account = account;
             Balance = balance;
             BookBalance = bookBalance;
+            NoOfTransactions = noOfTransactions;
         }
     }
 }
