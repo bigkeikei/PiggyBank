@@ -28,5 +28,9 @@ namespace PiggyBank.Models
         [JsonIgnore]
         [PiggyBankIgnoreWhenUpdate]
         public virtual ICollection<Book> Books { get; set; }
+
+        [JsonIgnore]
+        [PiggyBankIgnoreWhenUpdate]
+        public virtual ICollection<Token> Tokens { get; set; }
     }
 }

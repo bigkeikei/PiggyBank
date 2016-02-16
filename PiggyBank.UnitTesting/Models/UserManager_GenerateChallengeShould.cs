@@ -32,8 +32,11 @@ namespace PiggyBank.UnitTesting.Models
             var rand = new Random(Guid.NewGuid().GetHashCode());
             User user = mockDbContext.Data.Users[rand.Next(0, mockDbContext.Data.Users.Count - 1)];
             UserAuthentication oldAuth = new UserAuthentication();
-            oldAuth.Challenge = user.Authentication.Challenge;
-            oldAuth.ChallengeTimeout = user.Authentication.ChallengeTimeout;
+            if (user.Authentication != null)
+            {
+                oldAuth.Challenge = user.Authentication.Challenge;
+                oldAuth.ChallengeTimeout = user.Authentication.ChallengeTimeout;
+            }
             UserAuthentication newAuth = await userManager.GenerateChallenge(user.Id);
 
             Assert.NotEqual(oldAuth.Challenge, newAuth.Challenge);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using PiggyBank.Models;
+using System;
 
 namespace PiggyBank.UnitTesting.Mocks
 {
@@ -12,22 +13,30 @@ namespace PiggyBank.UnitTesting.Mocks
             Books = new List<Book>();
             Accounts = new List<Account>();
             Transactions = new List<Transaction>();
+            Tokens = new List<Token>();
         }
 
         public List<User> Users { get; set; }
         public List<Book> Books { get; set; }
         public List<Account> Accounts { get; set; }
         public List<Transaction> Transactions { get; set; }
+        public List<Token> Tokens { get; set; }
 
         public static MockData Seed()
         {
             MockData data = new MockData();
-            data.Users.Add(new User { Id = 1, Name = "Happy Cat", Email = "cat@happy.com", IsActive = true });
-            data.Users.Add(new User { Id = 2, Name = "Skiny Pig", Email = "pig@skiny.com", IsActive = true });
-            data.Users.Add(new User { Id = 3, Name = "Silly Dog", Email = "dog@silly.com", IsActive = true });
-            data.Users[0].Authentication = new UserAuthentication { Id = data.Users[0].Id, User = data.Users[0], AccessToken = "A" };
-            data.Users[1].Authentication = new UserAuthentication { Id = data.Users[1].Id, User = data.Users[1], AccessToken = "B" };
-            data.Users[2].Authentication = new UserAuthentication { Id = data.Users[2].Id, User = data.Users[2], AccessToken = "C" };
+            int userId = 0;
+            int tokenId = 0;
+            data.Users.Add(new User { Id = ++userId, Name = "Happy Cat", Email = "cat@happy.com", IsActive = true });
+            data.Users.Add(new User { Id = ++userId, Name = "Skiny Pig", Email = "pig@skiny.com", IsActive = true });
+            data.Users.Add(new User { Id = ++userId, Name = "Silly Dog", Email = "dog@silly.com", IsActive = true });
+            foreach (User user in data.Users)
+            {
+                user.Authentication = new UserAuthentication { Id = user.Id, User = user, Challenge = "haha", ChallengeTimeout = DateTime.Now, Secret = "secret" };
+                user.Tokens = new List<Token>();
+                user.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = tokenId.ToString(), ResourceType = Token.TokenResourceType.User, ResourceId = user.Id, Scope = Token.TokenScope.Full, TokenTimeout = DateTime.Now.AddSeconds(60) });
+                data.Tokens.AddRange(user.Tokens);
+            }
 
             return data;
         }

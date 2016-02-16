@@ -29,6 +29,8 @@ namespace PiggyBank.UnitTesting.Mocks
             Books = GetMockDbSet(Data.Books).Object;
             Accounts = GetMockDbSet(Data.Accounts).Object;
             Transactions = GetMockDbSet(Data.Transactions).Object;
+            Tokens = GetMockDbSet(Data.Tokens).Object; 
+
             SaveCount = 0;
         }
 
@@ -36,6 +38,7 @@ namespace PiggyBank.UnitTesting.Mocks
         public DbSet<Book> Books { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Token> Tokens { get; set; }
         public int SaveChanges() { SaveCount++; return 1; }
         public Task<int> SaveChangesAsync() { return Task.FromResult(SaveChanges()); }
         public MockData Data { get; }

@@ -15,5 +15,6 @@ namespace PiggyBank.Models
         public virtual DbSet<Book> Books { get; set; }
         public virtual DbSet<Account> Accounts { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
+        public virtual DbSet<Token> Tokens { get; set; }
     }
 }

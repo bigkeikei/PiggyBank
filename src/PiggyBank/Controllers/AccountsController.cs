@@ -21,7 +21,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Book book = await GetBook(userId, bookId, authorization);
+                Book book = await GetBook(userId, bookId);
                 IEnumerable<Account> accounts = await Repo.AccountManager.ListAccounts(book);
                 return new ObjectResult(accounts);
             }
@@ -35,7 +35,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Book book = await GetBook(userId, bookId, authorization);
+                Book book = await GetBook(userId, bookId);
                 Account accountCreated = await Repo.AccountManager.CreateAccount(book, account);
                 return CreatedAtRoute("GetAccount", new { controller = "accounts", userId = userId, bookId = bookId, accountId = accountCreated.Id }, accountCreated);
             }
@@ -49,9 +49,8 @@ namespace PiggyBank.Controllers
         public async Task<IActionResult> Get(int userId, int bookId, int accountId, [FromHeader] string authorization)
         {
             try {
-                Book book = await GetBook(userId, bookId, authorization);
                 Account account = await Repo.AccountManager.FindAccount(accountId);
-                if (account.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + accountId + "] cannot be found in Book [" + bookId + "]" });
+                if (account.Book.Id != bookId) return HttpNotFound(new { error = "Account [" + accountId + "] cannot be found in Book [" + bookId + "]" });
                 return new ObjectResult(account);
             }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
@@ -67,9 +66,8 @@ namespace PiggyBank.Controllers
             {
                 if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
-                Book book = await GetBook(userId, bookId, authorization);
                 Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId);
-                if (accountToUpdate.Book.Id != book.Id) return HttpNotFound(new { error = "Account [" + account.Id + "] not found in Book [" + bookId + "]" });
+                if (accountToUpdate.Book.Id != bookId) return HttpNotFound(new { error = "Account [" + account.Id + "] not found in Book [" + bookId + "]" });
                 await Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
             }
@@ -84,7 +82,6 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Book book = await GetBook(userId, bookId, authorization);
                 return new ObjectResult(await Repo.AccountManager.GetAccountDetail(accountId));
             }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
@@ -93,9 +90,8 @@ namespace PiggyBank.Controllers
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        private async Task<Book> GetBook(int userId, int bookId, string authorization)
+        private async Task<Book> GetBook(int userId, int bookId)
         {
-            User user = await TokenRequirement.Fulfill(Repo, userId, authorization);
             Book book = await Repo.BookManager.FindBook(bookId);
             if (book.User.Id != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
             return book;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Xunit;
 
 using PiggyBank.Models;
@@ -32,7 +33,14 @@ namespace PiggyBank.UnitTesting.Models
 
             var rand = new Random(Guid.NewGuid().GetHashCode());
             User user = mockDbContext.Data.Users[rand.Next(0, mockDbContext.Data.Users.Count - 1)];
-            User found = await userManager.FindUserByToken(user.Authentication.AccessToken);
+            var token = (from b in user.Tokens.AsQueryable()
+                           where b.ResourceType == Token.TokenResourceType.User &&
+                           b.ResourceId == user.Id &&
+                           b.Scope == Token.TokenScope.Full &&
+                           b.User.Id == user.Id
+                           select b).ToList();
+            Assert.True(token.Any());
+            User found = await userManager.FindUserByToken(token.First().AccessToken);
 
             Assert.True(found.Id == user.Id);
             Assert.True(found.Name == user.Name);

@@ -21,7 +21,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                User user = await GetUser(userId, authorization);
+                User user = await Repo.UserManager.FindUser(userId);
                 return new ObjectResult(await Repo.BookManager.ListBooks(user));
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
@@ -33,7 +33,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                User user = await GetUser(userId, authorization);
+                User user = await Repo.UserManager.FindUser(userId);
                 Book bookCreated = await Repo.BookManager.CreateBook(user, book);
                 return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id }, bookCreated);
             }
@@ -47,7 +47,6 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                User user = await GetUser(userId, authorization);
                 Book book = await Repo.BookManager.FindBook(bookId);
                 if (book.User.Id != userId) return HttpUnauthorized();
                 return new ObjectResult(book);
@@ -64,7 +63,6 @@ namespace PiggyBank.Controllers
             {
                 if (book == null) return HttpBadRequest(new { error = "Book object not provided" });
                 if (book.Id != bookId) return HttpBadRequest(new { error = "Invalid Book.Id [" + book.Id + "]" });
-                User user = await GetUser(userId, authorization);
                 Book bookToUpdate = await Repo.BookManager.FindBook(book.Id);
                 if (bookToUpdate.User.Id != userId) return HttpUnauthorized();
                 await Repo.BookManager.UpdateBook(book);
@@ -73,11 +71,6 @@ namespace PiggyBank.Controllers
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
-        }
-
-        private async Task<User> GetUser(int userId, string authorization)
-        {
-            return await TokenRequirement.Fulfill(Repo, userId, authorization);
         }
     }
 }

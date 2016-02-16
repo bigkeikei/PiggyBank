@@ -20,7 +20,6 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Book book = await GetBook(userId, bookId, authorization);
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
@@ -36,7 +35,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Book book = await GetBook(userId, bookId, authorization);
+                Book book = await GetBook(userId, bookId);
                 Transaction transactionCreated = await Repo.TransactionManager.CreateTransaction(book, transaction);
                 return CreatedAtRoute("GetTransaction", new { controller = "transactions", userId = userId, bookId = bookId, transactionId = transactionCreated.Id }, transactionCreated);
 
@@ -54,7 +53,6 @@ namespace PiggyBank.Controllers
             {
                 if (transaction == null) return HttpBadRequest(new { error = "Transaction object is missing" });
                 if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
-                Book book = await GetBook(userId, bookId, authorization);
                 Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);
                 if (transactionToUpdate.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
                 await Repo.TransactionManager.UpdateTransaction(transaction);
@@ -66,10 +64,8 @@ namespace PiggyBank.Controllers
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        private async Task<Book> GetBook(int userId, int bookId, string authorization)
+        private async Task<Book> GetBook(int userId, int bookId)
         {
-            User user = await TokenRequirement.Fulfill(Repo, userId, authorization);
-            if (user == null) throw new PiggyBankUserException("Unknown error");
             Book book = await Repo.BookManager.FindBook(bookId);
             if (book == null || book.User.Id != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
             return book;

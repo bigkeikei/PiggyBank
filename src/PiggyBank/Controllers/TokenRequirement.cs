@@ -10,32 +10,35 @@ namespace PiggyBank.Controllers
     public class TokenRequirement
     {
         IPiggyBankRepository _repo;
-        int _userId;
         string _authorization;
+        Token.TokenResourceType _resourceType;
+        int _resourceId;
+        Token.TokenScope[] _scopes;
 
-        public TokenRequirement(IPiggyBankRepository repo, int userId, string authorization)
+        public TokenRequirement(IPiggyBankRepository repo, string authorization, Token.TokenResourceType resourceType, int resourceId, Token.TokenScope[] scopes)
         {
             _repo = repo;
-            _userId = userId;
             _authorization = authorization;
+            _resourceType = resourceType;
+            _resourceId = resourceId;
+            _scopes = scopes;
         }
 
-        public async Task<User> Fulfill()
+        public async Task<Token> Fulfill()
         {
             try
             {
                 if (_authorization == null) { throw new PiggyBankUserException("Authorization not provided"); }
                 if (!_authorization.StartsWith("Bearer ")) { throw new PiggyBankUserException("Invalid authorization"); }
-                //User user = await _repo.UserManager.FindUser(_userId);
-                return await _repo.UserManager.CheckAccessToken(_userId, _authorization.Substring(7));
+                return await _repo.UserManager.CheckAccessToken(_authorization.Substring(7), _resourceType, _resourceId, _scopes);
             }
             catch (PiggyBankAuthenticationTimeoutException e) { throw new PiggyBankUserException(e.Message); }
             catch (PiggyBankDataException e) { throw new PiggyBankUserException(e.Message); }
         }
 
-        public static async Task<User> Fulfill(IPiggyBankRepository repo, int userId, string authorization)
+        public static async Task<Token> Fulfill(IPiggyBankRepository repo, string authorization, Token.TokenResourceType resourceType, int resourceId, Token.TokenScope[] scopes)
         {
-            TokenRequirement requirement = new TokenRequirement(repo, userId, authorization);
+            TokenRequirement requirement = new TokenRequirement(repo, authorization, resourceType, resourceId, scopes);
             return await requirement.Fulfill();
         }
     }

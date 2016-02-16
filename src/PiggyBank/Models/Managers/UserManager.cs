@@ -47,11 +47,15 @@ namespace PiggyBank.Models
 
         public async Task<User> FindUserByToken(string accessToken)
         {
-            var q = await (from b in _dbContext.Users
-                           where b.Authentication.AccessToken == accessToken
+            var q = await (from b in _dbContext.Tokens
+                           where b.AccessToken == accessToken &&
+                           b.ResourceType == Token.TokenResourceType.User &&
+                           b.Scope == Token.TokenScope.Full &&
+                           b.User.Id == b.ResourceId
                            select b).ToListAsync();
-            if (!q.Any()) throw new PiggyBankDataNotFoundException("User with token [" + accessToken + "] cannot be found");
-            return q.First();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Token [" + accessToken + "] cannot be found");
+            int userId = q.First().ResourceId;
+            return await FindUser(userId);
         }
 
         public async Task<User> UpdateUser(User user)
@@ -74,6 +78,10 @@ namespace PiggyBank.Models
         public async Task<UserAuthentication> GenerateChallenge(int userId)
         {
             User userToUpdate = await FindUser(userId);
+            if (userToUpdate.Authentication == null)
+            {
+                userToUpdate.Authentication = new UserAuthentication { User = userToUpdate };
+            }
             userToUpdate.Authentication.Challenge = userToUpdate.Name + System.DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             userToUpdate.Authentication.ChallengeTimeout = System.DateTime.Now.AddSeconds(60);
 
@@ -90,19 +98,44 @@ namespace PiggyBank.Models
             if (authSign != signature) { throw new PiggyBankDataException("Invalid signature [" + signature + "]"); }
             if (DateTime.Now >= auth.ChallengeTimeout) { throw new PiggyBankAuthenticationTimeoutException("Challenge expired"); }
 
-            userToUpdate.Authentication.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
-            userToUpdate.Authentication.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
-            userToUpdate.Authentication.TokenTimeout = System.DateTime.Now.AddMinutes(30);
+            Token token;
+            var q = await (from b in _dbContext.Tokens
+                           where b.User.Id == userId &&
+                           b.ResourceType == Token.TokenResourceType.User &&
+                           b.Scope == Token.TokenScope.Full
+                           select b).ToListAsync();
+
+            if (q.Any())
+            {
+                token = q.First();
+            }
+            else
+            {
+                token = new Token();
+                token.User = userToUpdate;
+                token.ResourceType = Token.TokenResourceType.User;
+                token.Scope = Token.TokenScope.Full;
+                userToUpdate.Tokens.Add(token);
+            }
+
+            token.AccessToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
+            token.RefreshToken = Hash(System.Guid.NewGuid().ToString() + userToUpdate.Name);
+            token.TokenTimeout = System.DateTime.Now.AddMinutes(30);
             await _dbContext.SaveChangesAsync();
             return userToUpdate.Authentication;
         }
 
-        public async Task<User> CheckAccessToken(int userId, string accessToken)
+        public async Task<Token> CheckAccessToken(string accessToken, Token.TokenResourceType resourceType, int resourceId, Token.TokenScope[] scopes)
         {
-            User user = await FindUser(userId);
-            if (user.Authentication.AccessToken != accessToken) { throw new PiggyBankDataException("Invalid token [" + accessToken + "]"); }
-            if (DateTime.Now >= user.Authentication.TokenTimeout) { throw new PiggyBankAuthenticationTimeoutException("Token expired"); }
-            return user;
+            var q = await (from b in _dbContext.Tokens
+                           where b.AccessToken == accessToken &&
+                           b.ResourceType == resourceType &&
+                           b.ResourceId == resourceId &&
+                           scopes.Contains(b.Scope)
+                           select b).ToListAsync();
+            if (!q.Any()) { throw new PiggyBankDataException("Invalid token [" + accessToken + "]"); }
+            if (DateTime.Now >= q.First().TokenTimeout) { throw new PiggyBankAuthenticationTimeoutException("Token expired"); }
+            return q.First();
         }
 
         private string Hash(string content)

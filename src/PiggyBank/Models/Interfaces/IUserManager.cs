@@ -13,6 +13,6 @@ namespace PiggyBank.Models
         Task<User> UpdateUser(User user);
         Task<UserAuthentication> GenerateChallenge(int userId);
         Task<UserAuthentication> GenerateToken(int userId, string signature);
-        Task<User> CheckAccessToken(int userId, string accessToken);
+        Task<Token> CheckAccessToken(string accessToken, Token.TokenResourceType resourceType, int resourceId, Token.TokenScope[] scopes);
     }
 }

@@ -10,6 +10,7 @@ namespace PiggyBank.Models
         DbSet<Book> Books { get; set; }
         DbSet<Account> Accounts { get; set; }
         DbSet<Transaction> Transactions { get; set; }
+        DbSet<Token> Tokens { get; set; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync();

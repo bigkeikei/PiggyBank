@@ -26,7 +26,7 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                return new ObjectResult(await GetUser(userId, authorization));
+                return new ObjectResult(await Repo.UserManager.FindUser(userId));
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
@@ -64,19 +64,12 @@ namespace PiggyBank.Controllers
             try
             {
                 if (user.Id != userId) return HttpUnauthorized();
-                await GetUser(userId, authorization);
                 await Repo.UserManager.UpdateUser(user);
                 return new NoContentResult();
             }
             catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
-        }
-
-        private async Task<User> GetUser(int userId, string authorization)
-        {
-            User user = await TokenRequirement.Fulfill(Repo, userId, authorization);
-            return user;
         }
     }
 }
