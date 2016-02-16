@@ -34,9 +34,17 @@ namespace PiggyBank.UnitTesting.Mocks
             {
                 user.Authentication = new UserAuthentication { Id = user.Id, User = user, Challenge = "haha", ChallengeTimeout = DateTime.Now, Secret = "secret" };
                 user.Tokens = new List<Token>();
-                user.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = tokenId.ToString(), ResourceType = Token.TokenResourceType.User, ResourceId = user.Id, Scope = Token.TokenScope.Full, TokenTimeout = DateTime.Now.AddSeconds(60) });
+                user.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = tokenId.ToString(), ResourceType = Token.TokenResourceType.User, ResourceId = user.Id, Scopes = Token.TokenScopes.Full, TokenTimeout = DateTime.Now.AddSeconds(60) });
                 data.Tokens.AddRange(user.Tokens);
             }
+
+            Token token1 = new Token { Id = ++tokenId, User = data.Users[0], AccessToken = "happycatcanreadskinypig", ResourceType = Token.TokenResourceType.User, ResourceId = 2, Scopes = Token.TokenScopes.Readable, TokenTimeout = DateTime.Now.AddSeconds(60) };
+            data.Users[0].Tokens.Add(token1);
+            data.Tokens.Add(token1);
+
+            Token token2 = new Token { Id = ++tokenId, User = data.Users[1], AccessToken = "skinypigcanreadhappycatbefore", ResourceType = Token.TokenResourceType.User, ResourceId = 2, Scopes = Token.TokenScopes.Readable, TokenTimeout = DateTime.Now.AddSeconds(-60) };
+            data.Users[1].Tokens.Add(token1);
+            data.Tokens.Add(token2);
 
             return data;
         }

@@ -10,7 +10,9 @@ namespace PiggyBank.Models
     public class Token
     {
         public enum TokenResourceType { User, Book, Account }
-        public enum TokenScope { Full, ReadOnly }
+
+        [Flags]
+        public enum TokenScopes { Readable= 1, Editable = 2, Full = Readable | Editable }
 
         public int Id { get; set; }
 
@@ -26,7 +28,7 @@ namespace PiggyBank.Models
         public int ResourceId { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public TokenScope Scope { get; set; }
+        public TokenScopes Scopes { get; set; }
 
         [JsonIgnore]
         public virtual User User { get; set; }

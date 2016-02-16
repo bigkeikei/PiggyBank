@@ -36,7 +36,7 @@ namespace PiggyBank.UnitTesting.Models
             var token = (from b in user.Tokens.AsQueryable()
                            where b.ResourceType == Token.TokenResourceType.User &&
                            b.ResourceId == user.Id &&
-                           b.Scope == Token.TokenScope.Full &&
+                           b.Scopes == Token.TokenScopes.Full &&
                            b.User.Id == user.Id
                            select b).ToList();
             Assert.True(token.Any());

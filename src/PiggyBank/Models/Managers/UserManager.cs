@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Security;
 
 namespace PiggyBank.Models
 {
@@ -21,7 +22,7 @@ namespace PiggyBank.Models
         {
             if (user == null) throw new PiggyBankDataException("User object is missing");
             PiggyBankUtility.CheckMandatory(user);
-            user.Authentication = new UserAuthentication();
+            user.Authentication = new UserAuthentication { User = user, Secret = Membership.GeneratePassword(8, 0) };
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
             return user;
@@ -50,7 +51,7 @@ namespace PiggyBank.Models
             var q = await (from b in _dbContext.Tokens
                            where b.AccessToken == accessToken &&
                            b.ResourceType == Token.TokenResourceType.User &&
-                           b.Scope == Token.TokenScope.Full &&
+                           b.Scopes == Token.TokenScopes.Full &&
                            b.User.Id == b.ResourceId
                            select b).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("Token [" + accessToken + "] cannot be found");
@@ -102,7 +103,7 @@ namespace PiggyBank.Models
             var q = await (from b in _dbContext.Tokens
                            where b.User.Id == userId &&
                            b.ResourceType == Token.TokenResourceType.User &&
-                           b.Scope == Token.TokenScope.Full
+                           b.Scopes == Token.TokenScopes.Full
                            select b).ToListAsync();
 
             if (q.Any())
@@ -114,7 +115,7 @@ namespace PiggyBank.Models
                 token = new Token();
                 token.User = userToUpdate;
                 token.ResourceType = Token.TokenResourceType.User;
-                token.Scope = Token.TokenScope.Full;
+                token.Scopes = Token.TokenScopes.Full;
                 userToUpdate.Tokens.Add(token);
             }
 
@@ -125,17 +126,17 @@ namespace PiggyBank.Models
             return userToUpdate.Authentication;
         }
 
-        public async Task<Token> CheckAccessToken(string accessToken, Token.TokenResourceType resourceType, int resourceId, Token.TokenScope[] scopes)
+        public async Task<bool> CheckAccessToken(string accessToken, Token.TokenResourceType resourceType, int resourceId, Token.TokenScopes scopes)
         {
             var q = await (from b in _dbContext.Tokens
                            where b.AccessToken == accessToken &&
                            b.ResourceType == resourceType &&
                            b.ResourceId == resourceId &&
-                           scopes.Contains(b.Scope)
+                           b.Scopes.HasFlag(scopes) &&
+                           b.TokenTimeout > DateTime.Now
                            select b).ToListAsync();
-            if (!q.Any()) { throw new PiggyBankDataException("Invalid token [" + accessToken + "]"); }
-            if (DateTime.Now >= q.First().TokenTimeout) { throw new PiggyBankAuthenticationTimeoutException("Token expired"); }
-            return q.First();
+            if (!q.Any()) { return false; }
+            return true;
         }
 
         private string Hash(string content)

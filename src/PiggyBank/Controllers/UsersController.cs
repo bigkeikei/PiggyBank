@@ -15,20 +15,24 @@ namespace PiggyBank.Controllers
         [FromServices]
         public IPiggyBankRepository Repo { get; set; }
 
+        /*
         [HttpGet("[controller]")]
         public async Task<IEnumerable<User>> List()
         {
             return await Repo.UserManager.ListUsers();
         }
+        */
 
         [HttpGet("[controller]/{userId}", Name = "GetUser")]
         public async Task<IActionResult> Get(int userId, [FromHeader] string authorization)
         {
+            TokenRequirement req = new TokenRequirement { ResourceType = Token.TokenResourceType.User, ResourceId = userId, Scopes = Token.TokenScopes.Readable };
+            if (!await req.Fulfill(Repo, authorization)) { return HttpUnauthorized(); }
+
             try
             {
                 return new ObjectResult(await Repo.UserManager.FindUser(userId));
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
@@ -61,6 +65,9 @@ namespace PiggyBank.Controllers
         [HttpPut("[controller]/{userId}")]
         public async Task<IActionResult> Put(int userId, [FromHeader] string authorization, [FromBody]User user)
         {
+            TokenRequirement req = new TokenRequirement { ResourceType = Token.TokenResourceType.User, ResourceId = userId, Scopes = Token.TokenScopes.Readable };
+            if (!await req.Fulfill(Repo, authorization)) { return HttpUnauthorized(); }
+
             try
             {
                 if (user.Id != userId) return HttpUnauthorized();
