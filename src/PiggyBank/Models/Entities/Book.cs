@@ -24,7 +24,7 @@ namespace PiggyBank.Models
         [JsonIgnore]
         [PiggyBankIgnoreWhenUpdate]
         [PiggyBankMandatory]
-        public virtual User User { get; set; }
+        public int UserId { get; set; }
 
         [JsonIgnore]
         [PiggyBankIgnoreWhenUpdate]

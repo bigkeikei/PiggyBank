@@ -17,7 +17,8 @@
     "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
     "MySql.Data": "6.9.8",
     "MySql.Data.Entity": "6.9.8",
-    "MySql.Web": "6.9.8"
+    "MySql.Web": "6.9.8",
+    "SimpleIdentity": "1.0.0-*"
   },
 
   "commands": {

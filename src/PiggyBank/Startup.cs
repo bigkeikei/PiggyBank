@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using SimpleIdentity.Models;
 using PiggyBank.Models;
 
 namespace PiggyBank
@@ -33,6 +34,9 @@ namespace PiggyBank
             services.AddScoped(
                 (_) => (IPiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
             services.AddTransient<IPiggyBankRepository, PiggyBankRepository>();
+            services.AddScoped(
+                (_) => (ISimpleIdentityDbContext)new SimpleIdentityMySqlDbContext(Configuration["Data:ConnectionString"]));
+            services.AddTransient<ISimpleIdentityRepository, SimpleIdentityRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

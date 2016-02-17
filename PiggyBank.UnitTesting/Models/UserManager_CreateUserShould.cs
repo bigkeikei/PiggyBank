@@ -6,10 +6,10 @@ using Moq;
 using System.Data.Entity;
 using Xunit;
 
-using PiggyBank.Models;
-using PiggyBank.UnitTesting.Mocks;
+using SimpleIdentity.Models;
+using SimpleIdentity.UnitTesting.Mocks;
 
-namespace PiggyBank.UnitTesting.Models
+namespace SimpleIdentity.UnitTesting.Models
 {
     public class UserManager_CreateUserShould
     {
@@ -19,11 +19,11 @@ namespace PiggyBank.UnitTesting.Models
             Exception ex = null;
             try
             {
-                var mockDbContext = new MockPiggyBankDbContext();
+                var mockDbContext = new MockSimpleIdentityDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
                 await userManager.CreateUser(null);
             }
-            catch (PiggyBankDataException e) { ex = e; }
+            catch (SimpleIdentityDataException e) { ex = e; }
 
             Assert.True(ex != null);
         }
@@ -34,12 +34,12 @@ namespace PiggyBank.UnitTesting.Models
             Exception ex = null;
             try
             {
-                var mockDbContext = new MockPiggyBankDbContext();
+                var mockDbContext = new MockSimpleIdentityDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
 
                 await userManager.CreateUser(new User());
             }
-            catch (PiggyBankDataException e) { ex = e; }
+            catch (SimpleIdentityDataException e) { ex = e; }
 
             Assert.True(ex != null);
         }
@@ -47,7 +47,7 @@ namespace PiggyBank.UnitTesting.Models
         [Fact]
         public async void ReturnUser_WhenSucessful()
         {
-            var mockDbContext = new MockPiggyBankDbContext();
+            var mockDbContext = new MockSimpleIdentityDbContext();
             UserManager userManager = new UserManager(mockDbContext);
 
             User user = new User();

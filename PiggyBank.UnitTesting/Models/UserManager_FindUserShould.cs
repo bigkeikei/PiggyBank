@@ -1,10 +1,10 @@
 ﻿using System;
 using Xunit;
 
-using PiggyBank.Models;
-using PiggyBank.UnitTesting.Mocks;
+using SimpleIdentity.Models;
+using SimpleIdentity.UnitTesting.Mocks;
 
-namespace PiggyBank.UnitTesting.Models
+namespace SimpleIdentity.UnitTesting.Models
 {
     public class UserManager_FindUserShould
     {
@@ -14,11 +14,11 @@ namespace PiggyBank.UnitTesting.Models
             Exception ex = null;
             try
             {
-                var mockDbContext = new MockPiggyBankDbContext();
+                var mockDbContext = new MockSimpleIdentityDbContext();
                 UserManager userManager = new UserManager(mockDbContext);
                 await userManager.FindUser(1);
             }
-            catch (PiggyBankDataNotFoundException e) { ex = e; }
+            catch (SimpleIdentityDataNotFoundException e) { ex = e; }
 
             Assert.True(ex != null);
         }
@@ -26,7 +26,7 @@ namespace PiggyBank.UnitTesting.Models
         [Fact]
         public async void ReturnUser_WhenUserIdMatch()
         {
-            var mockDbContext = new MockPiggyBankDbContext(MockData.Seed());
+            var mockDbContext = new MockSimpleIdentityDbContext(MockData.Seed());
             UserManager userManager = new UserManager(mockDbContext);
 
             var rand = new Random(Guid.NewGuid().GetHashCode());

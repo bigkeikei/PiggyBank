@@ -11,10 +11,8 @@ namespace PiggyBank.Models
             Database.CreateIfNotExists();
         }
 
-        public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Book> Books { get; set; }
         public virtual DbSet<Account> Accounts { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
-        public virtual DbSet<Token> Tokens { get; set; }
     }
 }

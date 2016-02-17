@@ -17,19 +17,17 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Book>> ListBooks(User user)
+        public async Task<IEnumerable<Book>> ListBooks(int userId)
         {
             var books = await (from b in _dbContext.Books
-                         where b.User.Id == user.Id
-                         select b).ToListAsync();
+                         where b.UserId == userId
+                               select b).ToListAsync();
             return books;
         }
 
-        public async Task<Book> CreateBook(User user, Book book)
+        public async Task<Book> CreateBook(Book book)
         {
-            if (user == null) throw new PiggyBankDataException("User object is missing");
             if (book == null) throw new PiggyBankDataException("Book object is missing");
-            book.User = user;
             PiggyBankUtility.CheckMandatory(book);
             _dbContext.Books.Add(book);
             await _dbContext.SaveChangesAsync();

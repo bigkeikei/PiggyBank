@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 
 using PiggyBank.Models;
+using SimpleIdentity.Models;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -21,10 +22,8 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                User user = await Repo.UserManager.FindUser(userId);
-                return new ObjectResult(await Repo.BookManager.ListBooks(user));
+                return new ObjectResult(await Repo.BookManager.ListBooks(userId));
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
         }
 
@@ -33,11 +32,10 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                User user = await Repo.UserManager.FindUser(userId);
-                Book bookCreated = await Repo.BookManager.CreateBook(user, book);
+                if (book.UserId != userId) { return HttpUnauthorized(); }
+                Book bookCreated = await Repo.BookManager.CreateBook(book);
                 return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id }, bookCreated);
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
@@ -48,10 +46,9 @@ namespace PiggyBank.Controllers
             try
             {
                 Book book = await Repo.BookManager.FindBook(bookId);
-                if (book.User.Id != userId) return HttpUnauthorized();
+                if (book.UserId != userId) return HttpUnauthorized();
                 return new ObjectResult(book);
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
@@ -64,11 +61,10 @@ namespace PiggyBank.Controllers
                 if (book == null) return HttpBadRequest(new { error = "Book object not provided" });
                 if (book.Id != bookId) return HttpBadRequest(new { error = "Invalid Book.Id [" + book.Id + "]" });
                 Book bookToUpdate = await Repo.BookManager.FindBook(book.Id);
-                if (bookToUpdate.User.Id != userId) return HttpUnauthorized();
+                if (bookToUpdate.UserId != userId) return HttpUnauthorized();
                 await Repo.BookManager.UpdateBook(book);
                 return new NoContentResult();
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }

@@ -24,7 +24,6 @@ namespace PiggyBank.Controllers
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
@@ -40,7 +39,6 @@ namespace PiggyBank.Controllers
                 return CreatedAtRoute("GetTransaction", new { controller = "transactions", userId = userId, bookId = bookId, transactionId = transactionCreated.Id }, transactionCreated);
 
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
@@ -58,7 +56,6 @@ namespace PiggyBank.Controllers
                 await Repo.TransactionManager.UpdateTransaction(transaction);
                 return new NoContentResult();
             }
-            catch (PiggyBankUserException) { return HttpUnauthorized(); }
             catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
@@ -67,7 +64,7 @@ namespace PiggyBank.Controllers
         private async Task<Book> GetBook(int userId, int bookId)
         {
             Book book = await Repo.BookManager.FindBook(bookId);
-            if (book == null || book.User.Id != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
+            if (book == null || book.UserId != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
             return book;
         }
     }
