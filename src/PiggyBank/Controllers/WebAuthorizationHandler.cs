@@ -12,7 +12,7 @@ namespace PiggyBank.Controllers
         private static string ExtractToken(string authorization)
         {
             if (authorization == null || authorization.Length == 0) throw new TokenExtractionException("Authorization is missing");
-            if (authorization.StartsWith("Bearer ")) throw new TokenExtractionException("Invalid authorization");
+            if (!authorization.StartsWith("Bearer ")) throw new TokenExtractionException("Invalid authorization");
             return authorization.Substring(7);
         }
 
