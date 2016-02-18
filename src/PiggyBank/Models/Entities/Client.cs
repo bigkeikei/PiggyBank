@@ -5,11 +5,9 @@ using System.Threading.Tasks;
 
 namespace PiggyBank.Models
 {
-    public class User
+    public class Client
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public bool IsActive { get; set; }
-        public virtual IEnumerable<Book> Books { get; set; }
+        public string Secret { get; set; }
     }
 }

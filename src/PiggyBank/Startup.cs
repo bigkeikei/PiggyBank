@@ -8,8 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using SimpleIdentity.Models;
 using PiggyBank.Models;
-using PiggyBank.Models.Data;
 
 namespace PiggyBank
 {
@@ -29,11 +29,14 @@ namespace PiggyBank
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
+            // Add framework
             services.AddMvc();
             services.AddScoped(
-                (_) => (PiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
-            services.AddTransient<IAccountRepository, AccountEFRepository>();
+                (_) => (IPiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
+            services.AddTransient<IPiggyBankRepository, PiggyBankRepository>();
+            services.AddScoped(
+                (_) => (ISimpleIdentityDbContext)new SimpleIdentityMySqlDbContext(Configuration["Data:ConnectionString"]));
+            services.AddTransient<ISimpleIdentityRepository, SimpleIdentityRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,6 +50,7 @@ namespace PiggyBank
             app.UseStaticFiles();
 
             app.UseMvc();
+
         }
 
         // Entry point for the application.

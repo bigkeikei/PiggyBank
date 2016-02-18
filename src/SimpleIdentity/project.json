@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0-*",
+  "description": "SimpleIdentity Class Library",
+  "authors": [ "PLiuPK" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+  "frameworks": {
+    "net451": {
+      "frameworkAssemblies": {
+        "System.Web": "4.0.0.0"
+      }
+    }
+  },
+  "dependencies": {
+    "EntityFramework": "6.1.3",
+    "MySql.Data": "6.9.8",
+    "MySql.Data.Entity": "6.9.8",
+    "MySql.Web": "6.9.8",
+    "Newtonsoft.Json": "8.0.2",
+    "System.ComponentModel.Annotations": "4.0.11-beta-23516"
+  }
+}

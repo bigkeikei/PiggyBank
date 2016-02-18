@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0-*",
+  "description": "Mock Class Library",
+  "authors": [ "PLiuPK" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+  "frameworks": {
+    "net451": {
+    }
+  },
+  "dependencies": {
+    "Moq": "4.2.1510.2205",
+    "EntityFramework": "6.1.3"
+
+  }
+}
