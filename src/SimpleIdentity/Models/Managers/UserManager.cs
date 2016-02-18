@@ -22,7 +22,10 @@ namespace SimpleIdentity.Models
             if (user.Name == null || user.Name.Length == 0) throw new SimpleIdentityDataException("User.Name is missing");
             if (user.Email == null || user.Email.Length == 0) throw new SimpleIdentityDataException("User.Email is missing");
             user.Authentication = new UserAuthentication { User = user, Secret = Membership.GeneratePassword(8, 0) };
+            AuthorizationManager auth = new AuthorizationManager(_dbContext);
             _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
+            await auth.GrantAuthorizationToUser(Authorization.AuthResourceType.User, user.Id, Authorization.AuthScopes.Full, user);
             await _dbContext.SaveChangesAsync();
             return user;
         }

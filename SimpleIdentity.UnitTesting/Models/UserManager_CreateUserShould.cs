@@ -49,15 +49,21 @@ namespace SimpleIdentity.UnitTesting.Models
         {
             var mockDbContext = new MockSimpleIdentityDbContext();
             UserManager userManager = new UserManager(mockDbContext);
+            AuthorizationManager authManager = new AuthorizationManager(mockDbContext);
 
             User user = new User();
             user.Name = "foo";
             user.Email = "foo@bar.com";
+            user.IsActive = true;
+            user.Id = 1;
 
             var createdUser = await userManager.CreateUser(user);
 
             Assert.True(createdUser.Name == user.Name);
             Assert.True(createdUser.Email == user.Email);
+            Assert.True(createdUser.Authentication.Secret.Length > 0);
+            Assert.True(await authManager.IsUserAuthorized(1, Authorization.AuthResourceType.User, 1, Authorization.AuthScopes.Full));
+
         }
     }
 }

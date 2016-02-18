@@ -23,7 +23,7 @@ namespace SimpleIdentity.UnitTesting.Models
                 ResourceId = 1,
                 Scopes = Authorization.AuthScopes.Readable
             });
-            bool result = await AuthorizationRequirement.FulfillAny(repo, 1, reqs);
+            bool result = await AuthorizationRequirement.FulfillAny(repo, "token1", reqs);
 
             Assert.True(result);
         }

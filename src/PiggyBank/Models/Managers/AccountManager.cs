@@ -106,6 +106,17 @@ namespace PiggyBank.Models
             return new AccountDetail(account, amount, bookAmount, noOfTransactions);
         }
 
+        public async Task<IEnumerable<Transaction>> GetTransactions(int accountId)
+        {
+            const int recordLimit = 100;
+            Account account = await FindAccount(accountId);
+            List<Transaction> transactions = new List<Transaction>();
+            return await GetTransactions(account)
+                .OrderByDescending(b => b.TransactionDate)
+                .Take(recordLimit)
+                .ToListAsync();
+        }
+
         private IQueryable<Transaction> GetTransactions(Account account)
         {
             int bookId = account.Book.Id;

@@ -9,6 +9,7 @@ namespace SimpleIdentity.Models
         Task<User> CreateUser(User user);
         Task<User> FindUser(int userId);
         Task<User> FindUserByName(string userName);
+        Task<User> FindUserByToken(string accessToken);
         Task<User> UpdateUser(User user);
     }
 }
