@@ -16,11 +16,18 @@ namespace SimpleIdentity.Models
             return await repo.AuthorizationManager.IsUserAuthorized(userId, AuthResourceType, ResourceId, Scopes);
         }
 
-        public static async Task<bool> FulfillAny(ISimpleIdentityRepository repo, int userId, IEnumerable<AuthorizationRequirement> requirements)
+        public async Task<bool> Fulfill(ISimpleIdentityRepository repo, string token)
         {
+            User user = await repo.UserManager.FindUserByToken(token);
+            return await Fulfill(repo, user.Id);
+        }
+
+        public static async Task<bool> FulfillAny(ISimpleIdentityRepository repo, string token, IEnumerable<AuthorizationRequirement> requirements)
+        {
+            User user = await repo.UserManager.FindUserByToken(token);
             foreach (var req in requirements)
             {
-                if (await req.Fulfill(repo, userId)) return true;
+                if (await req.Fulfill(repo, user.Id)) return true;
             }
             return false;
         }
