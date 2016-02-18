@@ -17,10 +17,10 @@ namespace SimpleIdentity.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public AuthResourceType ResourceType { get; set; }
 
-        public int AuthResourceId { get; set; }
+        public int ResourceId { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public AuthScopes scopes { get; set; }
+        public AuthScopes Scopes { get; set; }
 
         public DateTime? GrantDate { get; set; }
 

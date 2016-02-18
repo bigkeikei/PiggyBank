@@ -19,6 +19,8 @@ namespace SimpleIdentity.Models
         public async Task<User> CreateUser(User user)
         {
             if (user == null) throw new SimpleIdentityDataException("User object is missing");
+            if (user.Name == null || user.Name.Length == 0) throw new SimpleIdentityDataException("User.Name is missing");
+            if (user.Email == null || user.Email.Length == 0) throw new SimpleIdentityDataException("User.Email is missing");
             user.Authentication = new UserAuthentication { User = user, Secret = Membership.GeneratePassword(8, 0) };
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
@@ -48,18 +50,25 @@ namespace SimpleIdentity.Models
             var q = await _dbContext.Tokens
                 .Where(b => b.AccessToken == accessToken && 
                     b.TokenTimeout > DateTime.Now && 
+                    !b.IsRevoked &&
                     b.User.IsActive)
                 .Select(b => new { User = b.User }).ToListAsync();
-            if (!q.Any()) throw new SimpleIdentityDataNotFoundException("Token [" + accessToken + "] cannot be found");
+            if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User with Token [" + accessToken + "] cannot be found");
             return q.First().User;
         }
 
         public async Task<User> UpdateUser(User user)
         {
             if (user == null) throw new SimpleIdentityDataException("User object is missing");
+            if (user.Name == null || user.Name.Length == 0) throw new SimpleIdentityDataException("User.Name is missing");
+            if (user.Email == null || user.Email.Length == 0) throw new SimpleIdentityDataException("User.Email is missing");
+
             User userToUpdate = await FindUser(user.Id);
             
             if (userToUpdate.Name != user.Name) throw new SimpleIdentityDataException("Editing User.Name is not supported");
+            userToUpdate.Email = user.Email;
+            userToUpdate.IsActive = user.IsActive;
+
             await _dbContext.SaveChangesAsync();
             return userToUpdate;
         }

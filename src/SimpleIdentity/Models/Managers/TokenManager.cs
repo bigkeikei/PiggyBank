@@ -6,7 +6,7 @@ using System.Data.Entity;
 
 namespace SimpleIdentity.Models
 {
-    public class TokenManager
+    public class TokenManager : ITokenManager
     {
         private ISimpleIdentityDbContext _dbContext;
 
@@ -15,7 +15,7 @@ namespace SimpleIdentity.Models
             _dbContext = dbContext;
         }
 
-        public async Task<Token> GenerateToken(int userId, string userSecret, int clientId, string clientSecret)
+        public async Task<Token> GenerateTokenByPassword(int userId, string userSecret, int clientId, string clientSecret)
         {
             var users = await _dbContext.Users
                 .Where(b => b.Id == userId &&

@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace SimpleIdentity.Models
 {
@@ -12,6 +13,10 @@ namespace SimpleIdentity.Models
         public string RefreshToken { get; set; }
 
         public DateTime? TokenTimeout { get; set; }
+
+        [DefaultValue(false)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool IsRevoked { get; set; }
 
         [JsonIgnore]
         public virtual User User { get; set; }

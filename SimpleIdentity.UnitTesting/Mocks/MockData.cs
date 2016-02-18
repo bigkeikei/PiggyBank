@@ -25,6 +25,7 @@ namespace SimpleIdentity.UnitTesting.Mocks
             MockData data = new MockData();
             int userId = 0;
             int tokenId = 0;
+            int authId = 0;
             data.Clients.Add(new Client { Id = 1, Secret = "123" });
             data.Users.Add(new User { Id = ++userId, Name = "Happy Cat", Email = "cat@happy.com", IsActive = true });
             data.Users.Add(new User { Id = ++userId, Name = "Skiny Pig", Email = "pig@skiny.com", IsActive = true });
@@ -33,6 +34,16 @@ namespace SimpleIdentity.UnitTesting.Mocks
             {
                 user.Authentication = new UserAuthentication { Id = user.Id, User = user, Secret = "secret" };
                 data.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = "token" + tokenId.ToString(), RefreshToken="refresh" + tokenId.ToString(), TokenTimeout = DateTime.Now.AddSeconds(60), Client = data.Clients[0] });
+                data.Authorizations.Add(new Authorization
+                {
+                    Id = ++authId,
+                    ResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = user.Id,
+                    Scopes = Authorization.AuthScopes.Full,
+                    User = user,
+                    GrantDate = DateTime.Now,
+                    IsRevoked = false
+                });
             }
 
             return data;
