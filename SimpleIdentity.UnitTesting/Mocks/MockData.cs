@@ -32,7 +32,7 @@ namespace SimpleIdentity.UnitTesting.Mocks
             foreach (User user in data.Users)
             {
                 user.Authentication = new UserAuthentication { Id = user.Id, User = user, Secret = "secret" };
-                data.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = "token" + tokenId.ToString(), TokenTimeout = DateTime.Now.AddSeconds(60), Client = data.Clients[0] });
+                data.Tokens.Add(new Token { Id = ++tokenId, User = user, AccessToken = "token" + tokenId.ToString(), RefreshToken="refresh" + tokenId.ToString(), TokenTimeout = DateTime.Now.AddSeconds(60), Client = data.Clients[0] });
             }
 
             return data;

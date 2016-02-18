@@ -43,5 +43,24 @@ namespace SimpleIdentity.Models
 
             return token;
         }
+
+        public async Task<Token> RefreshToken(string accessToken, string refreshToken)
+        {
+            var tokens = await _dbContext.Tokens
+                .Where(b => b.AccessToken == accessToken &&
+                    b.RefreshToken == refreshToken &&
+                    b.User.IsActive)
+                .Select(b => b).ToListAsync();
+            if (!tokens.Any()) { throw new SimpleIdentityDataNotFoundException("Token cannot be found"); }
+
+            Token token = tokens.First();
+            token.AccessToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            token.RefreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            token.TokenTimeout = DateTime.Now.AddSeconds(60);
+
+            await _dbContext.SaveChangesAsync();
+
+            return token;
+        }
     }
 }
