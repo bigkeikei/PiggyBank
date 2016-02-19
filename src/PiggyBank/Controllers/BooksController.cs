@@ -42,7 +42,7 @@ namespace PiggyBank.Controllers
                         ResourceId = book.Id,
                         Scopes = Authorization.AuthScopes.Readable
                     };
-                    if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { readableBooks.Add(book); }
+                    if (await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { readableBooks.Add(book); }
                 }
                 return new ObjectResult(readableBooks.AsEnumerable());
             }

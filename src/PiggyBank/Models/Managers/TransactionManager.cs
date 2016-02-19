@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
@@ -14,6 +15,39 @@ namespace PiggyBank.Models
         public TransactionManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<Transaction>> ListTransactions(int bookId, DateTime periodStart, DateTime periodEnd)
+        {
+            return await ListTransactions(b => b.Book.Id == bookId &&
+                b.TransactionDate >= periodStart &&
+                b.TransactionDate <= periodEnd);
+        }
+
+        public async Task<long> CountTransactions(int bookId, DateTime periodStart, DateTime periodEnd)
+        {
+            return await CountTransactions(b => b.Book.Id == bookId &&
+                b.TransactionDate >= periodStart &&
+                b.TransactionDate <= periodEnd);
+        }
+
+        public async Task<IEnumerable<Transaction>> ListTransactions(Expression<Func<Transaction, bool>> options)
+        {
+            const int recordLimit = 100;
+            return await _dbContext.Transactions
+                .Where(options)
+                .Where(b => b.IsValid)
+                .OrderByDescending(b => b.TransactionDate)
+                .Take(recordLimit)
+                .ToListAsync();
+        }
+
+        public async Task<long> CountTransactions(Expression<Func<Transaction, bool>> options)
+        {
+            return await _dbContext.Transactions
+                .Where(options)
+                .Where(b => b.IsValid)
+                .LongCountAsync();
         }
 
         public async Task<Transaction> CreateTransaction(Book book, Transaction transaction)
