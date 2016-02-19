@@ -39,7 +39,36 @@ namespace PiggyBank.Controllers
             {
                 if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
                 await GetBook(userId, bookId);
-                return new ObjectResult(await Repo.TransactionManager.ListTransaction(bookId, periodStart, periodEnd));
+                return new ObjectResult(await Repo.TransactionManager.ListTransactions(bookId, periodStart, periodEnd));
+
+            }
+            catch (TokenExtractionException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
+        [HttpGet("count")]
+        public async Task<ActionResult> Count(int userId, int bookId, [FromQuery] DateTime periodStart, [FromQuery] DateTime periodEnd, [FromHeader] string authorization)
+        {
+            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.User,
+                ResourceId = userId,
+                Scopes = Authorization.AuthScopes.Full
+            });
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.Book,
+                ResourceId = bookId,
+                Scopes = Authorization.AuthScopes.Readable
+            });
+            try
+            {
+                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                await GetBook(userId, bookId);
+                return new ObjectResult(await Repo.TransactionManager.CountTransactions(bookId, periodStart, periodEnd));
 
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }

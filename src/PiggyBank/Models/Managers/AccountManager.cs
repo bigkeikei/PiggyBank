@@ -103,6 +103,22 @@ namespace PiggyBank.Models
                 bookAmount += account.Closing.BookAmount ?? 0;
             }
 
+            var q = await GetTransactions(account)
+                .Select(b => new
+                    {
+                        Amount = (b.DebitAccount.Id == account.Id ? 1 : -1) * (b.IsClosed ? 0 : 1) * account.DebitSign * b.Amount,
+                        BookAmount = (b.DebitAccount.Id == account.Id ? 1 : -1) * (b.IsClosed ? 0 : 1) * account.DebitSign * b.BookAmount,
+                        Group = 1
+                    })
+                .GroupBy(b => b.Group)
+                .Select(g => new
+                    {
+                        Amount = g.Sum(x => x.Amount),
+                        BookAmount = g.Sum(x => x.BookAmount),
+                        NoOfTransactions = g.Count()
+                    })
+                .ToListAsync();
+            /*
             var q = await (from b in 
                                (from b in GetTransactions(account)
                                 select new
@@ -118,6 +134,7 @@ namespace PiggyBank.Models
                                BookAmount = g.Sum(x => x.BookAmount),
                                NoOfTransactions = g.Count()
                            }).ToListAsync();
+            */
             if (q.Any())
             {
                 var result = q.First();
@@ -140,14 +157,21 @@ namespace PiggyBank.Models
                 .ToListAsync();
         }
 
+        public async Task<long> GetTransactionCount(int accountId)
+        {
+            Account account = await FindAccount(accountId);
+            List<Transaction> transactions = new List<Transaction>();
+            return await GetTransactions(account)
+                .LongCountAsync();
+        }
+
         private IQueryable<Transaction> GetTransactions(Account account)
         {
             int bookId = account.Book.Id;
-            return from b in _dbContext.Transactions
-                   where b.IsValid &&
-                   b.Book.Id == bookId &&
-                   (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id)
-                   select b;
+            return _dbContext.Transactions
+                .Where(b => b.IsValid &&
+                    b.Book.Id == bookId &&
+                    (b.DebitAccount.Id == account.Id || b.CreditAccount.Id == account.Id));
         }
     }
 }

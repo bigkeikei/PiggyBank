@@ -15,5 +15,6 @@ namespace PiggyBank.Models
         Task<Account> UpdateAccount(Account account);
         Task<AccountDetail> GetAccountDetail(int accountId);
         Task<IEnumerable<Transaction>> GetTransactions(int accountId);
+        Task<long> GetTransactionCount(int accountId);
     }
 }

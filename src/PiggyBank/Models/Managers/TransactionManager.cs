@@ -17,20 +17,37 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Transaction>> ListTransaction(int bookId, DateTime periodStart, DateTime periodEnd)
+        public async Task<IEnumerable<Transaction>> ListTransactions(int bookId, DateTime periodStart, DateTime periodEnd)
         {
-            return await ListTransaction(b => b.Book.Id == bookId &&
+            return await ListTransactions(b => b.Book.Id == bookId &&
                 b.TransactionDate >= periodStart &&
                 b.TransactionDate <= periodEnd);
         }
 
-        private async Task<IEnumerable<Transaction>> ListTransaction(Expression<Func<Transaction, bool>> options)
+        public async Task<long> CountTransactions(int bookId, DateTime periodStart, DateTime periodEnd)
         {
+            return await CountTransactions(b => b.Book.Id == bookId &&
+                b.TransactionDate >= periodStart &&
+                b.TransactionDate <= periodEnd);
+        }
+
+        public async Task<IEnumerable<Transaction>> ListTransactions(Expression<Func<Transaction, bool>> options)
+        {
+            const int recordLimit = 100;
             return await _dbContext.Transactions
                 .Where(options)
                 .Where(b => b.IsValid)
                 .OrderByDescending(b => b.TransactionDate)
+                .Take(recordLimit)
                 .ToListAsync();
+        }
+
+        public async Task<long> CountTransactions(Expression<Func<Transaction, bool>> options)
+        {
+            return await _dbContext.Transactions
+                .Where(options)
+                .Where(b => b.IsValid)
+                .LongCountAsync();
         }
 
         public async Task<Transaction> CreateTransaction(Book book, Transaction transaction)
