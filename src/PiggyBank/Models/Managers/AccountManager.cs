@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
@@ -17,9 +18,21 @@ namespace PiggyBank.Models
 
         public async Task<IEnumerable<Account>> ListAccounts(Book book)
         {
-            var accounts = await (from b in _dbContext.Accounts
-                            where b.Book.Id == book.Id
-                            select b).ToListAsync();
+            return await ListAccounts(b => b.Book.Id == book.Id);
+        }
+
+        public async Task<IEnumerable<Account>> ListAccounts(int userId)
+        {
+            return await ListAccounts(b => b.Book.UserId == userId);
+        }
+
+        private async Task<IEnumerable<Account>> ListAccounts(Expression<Func<Account, bool>> options)
+        {
+            var accounts = await _dbContext.Accounts
+                .Where(b => b.IsValid)
+                .Where(options)
+                .ToListAsync();
+            //if (!accounts.Any()) { throw new PiggyBankDataNotFoundException("Account cannot be found by expression " + options.ToString())}
             return accounts;
         }
 
@@ -38,6 +51,16 @@ namespace PiggyBank.Models
         {
             var q = await (from b in _dbContext.Accounts
                            where b.Id == accountId
+                           select b).ToListAsync();
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
+            return q.First();
+        }
+
+        public async Task<Account> FindAccount(int accountId, int userId)
+        {
+            var q = await (from b in _dbContext.Accounts
+                           where b.Id == accountId &&
+                           b.Book.UserId == userId
                            select b).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("Account [" + accountId + "] cannot be found");
             return q.First();
