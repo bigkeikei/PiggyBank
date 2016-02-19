@@ -19,6 +19,35 @@ namespace PiggyBank.Controllers
         [FromServices]
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
+        [HttpGet]
+        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime periodStart, [FromQuery] DateTime periodEnd, [FromHeader] string authorization)
+        {
+            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.User,
+                ResourceId = userId,
+                Scopes = Authorization.AuthScopes.Full
+            });
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.Book,
+                ResourceId = bookId,
+                Scopes = Authorization.AuthScopes.Readable
+            });
+            try
+            {
+                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                await GetBook(userId, bookId);
+                return new ObjectResult(await Repo.TransactionManager.ListTransaction(bookId, periodStart, periodEnd));
+
+            }
+            catch (TokenExtractionException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
         [HttpGet("{transactionId}", Name = "GetTransaction")]
         public async Task<IActionResult> Get(int userId, int bookId, int transactionId, [FromHeader] string authorization)
         {

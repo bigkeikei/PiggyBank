@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace PiggyBank.Models
@@ -14,6 +15,22 @@ namespace PiggyBank.Models
         public TransactionManager(IPiggyBankDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<Transaction>> ListTransaction(int bookId, DateTime periodStart, DateTime periodEnd)
+        {
+            return await ListTransaction(b => b.Book.Id == bookId &&
+                b.TransactionDate >= periodStart &&
+                b.TransactionDate <= periodEnd);
+        }
+
+        private async Task<IEnumerable<Transaction>> ListTransaction(Expression<Func<Transaction, bool>> options)
+        {
+            return await _dbContext.Transactions
+                .Where(options)
+                .Where(b => b.IsValid)
+                .OrderByDescending(b => b.TransactionDate)
+                .ToListAsync();
         }
 
         public async Task<Transaction> CreateTransaction(Book book, Transaction transaction)
