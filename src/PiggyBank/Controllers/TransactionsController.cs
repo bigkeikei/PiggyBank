@@ -20,7 +20,7 @@ namespace PiggyBank.Controllers
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
         [HttpGet]
-        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime periodStart, [FromQuery] DateTime periodEnd, [FromHeader] string authorization)
+        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
@@ -49,7 +49,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("count")]
-        public async Task<ActionResult> Count(int userId, int bookId, [FromQuery] DateTime periodStart, [FromQuery] DateTime periodEnd, [FromHeader] string authorization)
+        public async Task<ActionResult> Count(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
