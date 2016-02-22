@@ -146,23 +146,33 @@ namespace PiggyBank.Models
             return new AccountDetail(account, amount, bookAmount, noOfTransactions);
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactions(int accountId)
+        private List<Expression<Func<Transaction, bool>>> GetPeriodOptions(DateTime? periodStart, DateTime? periodEnd)
+        {
+            List<Expression<Func<Transaction, bool>>> options = new List<Expression<Func<Transaction, bool>>>();
+            if (periodStart != null) { options.Add(b => b.TransactionDate >= periodStart); }
+            if (periodEnd != null) { options.Add(b => b.TransactionDate <= periodEnd); }
+            return options;
+        }
+
+        public async Task<IEnumerable<Transaction>> GetTransactions(int accountId, DateTime? periodStart, DateTime? periodEnd)
         {
             const int recordLimit = 100;
             Account account = await FindAccount(accountId);
-            List<Transaction> transactions = new List<Transaction>();
-            return await GetTransactions(account)
-                .OrderByDescending(b => b.TransactionDate)
+            var q = GetTransactions(account);
+            var options = GetPeriodOptions(periodStart, periodEnd);
+            foreach (Expression<Func<Transaction, bool>> exp in options) { q.Where(exp); }
+            return await q.OrderByDescending(b => b.TransactionDate)
                 .Take(recordLimit)
                 .ToListAsync();
         }
 
-        public async Task<long> GetTransactionCount(int accountId)
+        public async Task<long> GetTransactionCount(int accountId, DateTime? periodStart, DateTime? periodEnd)
         {
             Account account = await FindAccount(accountId);
-            List<Transaction> transactions = new List<Transaction>();
-            return await GetTransactions(account)
-                .LongCountAsync();
+            var q = GetTransactions(account);
+            var options = GetPeriodOptions(periodStart, periodEnd);
+            foreach (Expression<Func<Transaction, bool>> exp in options) { q.Where(exp); }
+            return await q.LongCountAsync();
         }
 
         private IQueryable<Transaction> GetTransactions(Account account)
