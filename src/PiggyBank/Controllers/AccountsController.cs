@@ -216,7 +216,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("[controller]/{accountId}/transactions")]
-        public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords [FromHeader] string authorization)
+        public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement

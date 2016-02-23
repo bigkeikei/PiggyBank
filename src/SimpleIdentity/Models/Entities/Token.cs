@@ -18,6 +18,10 @@ namespace SimpleIdentity.Models
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool IsRevoked { get; set; }
 
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool RequireSignature { get; set; }
+
         [JsonIgnore]
         public virtual User User { get; set; }
 
