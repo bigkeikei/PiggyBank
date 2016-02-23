@@ -146,7 +146,7 @@ namespace PiggyBank.Models
             return new AccountDetail(account, amount, bookAmount, noOfTransactions);
         }
 
-        private List<Expression<Func<Transaction, bool>>> GetPeriodOptions(DateTime? periodStart, DateTime? periodEnd)
+        private List<Expression<Func<Transaction, bool>>> GenerateOptions(DateTime? periodStart, DateTime? periodEnd)
         {
             List<Expression<Func<Transaction, bool>>> options = new List<Expression<Func<Transaction, bool>>>();
             if (periodStart != null) { options.Add(b => b.TransactionDate >= periodStart); }
@@ -154,15 +154,15 @@ namespace PiggyBank.Models
             return options;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactions(int accountId, DateTime? periodStart, DateTime? periodEnd)
+        public async Task<IEnumerable<Transaction>> GetTransactions(int accountId, DateTime? periodStart, DateTime? periodEnd, int? noOfRecords)
         {
             const int recordLimit = 100;
             Account account = await FindAccount(accountId);
             var q = GetTransactions(account);
-            var options = GetPeriodOptions(periodStart, periodEnd);
+            var options = GenerateOptions(periodStart, periodEnd);
             foreach (Expression<Func<Transaction, bool>> exp in options) { q.Where(exp); }
             return await q.OrderByDescending(b => b.TransactionDate)
-                .Take(recordLimit)
+                .Take(noOfRecords??recordLimit)
                 .ToListAsync();
         }
 
@@ -170,7 +170,7 @@ namespace PiggyBank.Models
         {
             Account account = await FindAccount(accountId);
             var q = GetTransactions(account);
-            var options = GetPeriodOptions(periodStart, periodEnd);
+            var options = GenerateOptions(periodStart, periodEnd);
             foreach (Expression<Func<Transaction, bool>> exp in options) { q.Where(exp); }
             return await q.LongCountAsync();
         }

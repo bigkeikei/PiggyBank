@@ -17,21 +17,21 @@ namespace PiggyBank.Models
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Transaction>> ListTransactions(int bookId, DateTime? periodStart, DateTime? periodEnd)
+        public async Task<IEnumerable<Transaction>> ListTransactions(int bookId, DateTime? periodStart, DateTime? periodEnd, int? noOfRecords)
         {
-            var options = GetPeriodOptions(periodStart, periodEnd);
+            var options = GenerateOptions(periodStart, periodEnd);
             options.Add(b => b.Book.Id == bookId);
-            return await ListTransactions(options);
+            return await ListTransactions(options, noOfRecords);
         }
 
         public async Task<long> CountTransactions(int bookId, DateTime? periodStart, DateTime? periodEnd)
         {
-            var options = GetPeriodOptions(periodStart, periodEnd);
+            var options = GenerateOptions(periodStart, periodEnd);
             options.Add(b => b.Book.Id == bookId);
             return await CountTransactions(options);
         }
 
-        private List<Expression<Func<Transaction, bool>>> GetPeriodOptions(DateTime? periodStart, DateTime? periodEnd)
+        private List<Expression<Func<Transaction, bool>>> GenerateOptions(DateTime? periodStart, DateTime? periodEnd)
         {
             List<Expression<Func<Transaction, bool>>> options = new List<Expression<Func<Transaction, bool>>>();
             if (periodStart != null) { options.Add(b => b.TransactionDate >= periodStart); }
@@ -39,7 +39,7 @@ namespace PiggyBank.Models
             return options;
         }
 
-        public async Task<IEnumerable<Transaction>> ListTransactions(IEnumerable<Expression<Func<Transaction, bool>>> options)
+        public async Task<IEnumerable<Transaction>> ListTransactions(IEnumerable<Expression<Func<Transaction, bool>>> options, int? noOfRecords)
         {
             const int recordLimit = 100;
             IQueryable<Transaction> q = _dbContext.Transactions;
@@ -49,7 +49,7 @@ namespace PiggyBank.Models
             }
             return await q.Where(b => b.IsValid)
                 .OrderByDescending(b => b.TransactionDate)
-                .Take(recordLimit)
+                .Take(noOfRecords??recordLimit)
                 .ToListAsync();
         }
 

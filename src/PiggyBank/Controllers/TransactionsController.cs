@@ -20,7 +20,7 @@ namespace PiggyBank.Controllers
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
         [HttpGet]
-        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
+        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
@@ -39,7 +39,7 @@ namespace PiggyBank.Controllers
             {
                 if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
                 await GetBook(userId, bookId);
-                return new ObjectResult(await Repo.TransactionManager.ListTransactions(bookId, periodStart, periodEnd));
+                return new ObjectResult(await Repo.TransactionManager.ListTransactions(bookId, periodStart, periodEnd, noOfRecords));
 
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }

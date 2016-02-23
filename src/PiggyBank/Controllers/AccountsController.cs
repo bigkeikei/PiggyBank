@@ -216,7 +216,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("[controller]/{accountId}/transactions")]
-        public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
+        public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
@@ -241,7 +241,7 @@ namespace PiggyBank.Controllers
                     Scopes = Authorization.AuthScopes.Readable
                 });
                 if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
-                return new ObjectResult(await Repo.AccountManager.GetTransactions(accountId, periodStart, periodEnd));
+                return new ObjectResult(await Repo.AccountManager.GetTransactions(accountId, periodStart, periodEnd, noOfRecords));
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
