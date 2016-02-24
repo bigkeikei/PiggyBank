@@ -74,7 +74,7 @@ namespace PiggyBank.Controllers
             try
             {
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 if (user.Id != userId) return HttpUnauthorized();
                 await IdentityRepo.UserManager.UpdateUser(user);

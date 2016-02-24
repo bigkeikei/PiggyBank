@@ -113,7 +113,7 @@ namespace PiggyBank.Controllers
             try
             {
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Book book = await GetBook(userId, bookId);
                 Account accountCreated = await Repo.AccountManager.CreateAccount(book, account);
@@ -172,7 +172,7 @@ namespace PiggyBank.Controllers
             try
             {
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
                 Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId, userId);
@@ -263,7 +263,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("[controller]/{accountId}/transactions/count")]
-        public async Task<IActionResult> CountTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
+        public async Task<IActionResult> GetTransactionCount(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement

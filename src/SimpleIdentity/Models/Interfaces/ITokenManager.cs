@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace SimpleIdentity.Models
 {
@@ -10,6 +11,6 @@ namespace SimpleIdentity.Models
         Task<Token> GenerateTokenBySignature(int userId, int clientId, string sign);
         Task<Token> GenerateTokenByPassword(int userId, string userSecret, int clientId, string clientSecret);
         Task<Token> RefreshToken(string accessToken, string refreshToken);
-        Task<string> ComputeSignature(string accessToken, string method, string url, Dictionary<string, string> parameters = null);
+        Task<string> ComputeSignature(string accessToken, string method, string url, Stream body = null, Dictionary<string, string> parameters = null);
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Data.Entity;
 using System.Security.Cryptography;
 using System.Text;
+using System.IO;
 
 namespace SimpleIdentity.Models
 {
@@ -17,7 +18,7 @@ namespace SimpleIdentity.Models
             _dbContext = dbContext;
         }
 
-        public async Task<string> ComputeSignature(string accessToken, string method, string url, Dictionary<string, string> parameters = null)
+        public async Task<string> ComputeSignature(string accessToken, string method, string url, Stream body = null, Dictionary<string, string> parameters = null)
         {
             var tokens = await _dbContext.Tokens
                 .Where(b => b.AccessToken == accessToken &&
@@ -33,6 +34,11 @@ namespace SimpleIdentity.Models
             dataDict.Add("accessToken", accessToken);
             dataDict.Add("clientId", token.Client.Id.ToString());
             dataDict.Add("clientSecret", token.Client.Secret);
+            if (body != null)
+            {
+                StreamReader r = new StreamReader(body);
+                dataDict.Add("httpBody", r.ReadToEnd());
+            }
             dataDict.Add("httpMethod", method);
             dataDict.Add("httpUrl", url);
             return Hash(dataDict.OrderBy(b => b.Key).Select(b => b.Value));

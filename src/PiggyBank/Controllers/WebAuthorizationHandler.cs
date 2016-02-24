@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 
 using SimpleIdentity.Models;
 
@@ -22,9 +23,9 @@ namespace PiggyBank.Controllers
             Signature = (pos == authorization.Length ? null : authorization.Substring(pos + 1));
         }
 
-        public async Task<bool> IsValid(ISimpleIdentityRepository repo, string method, string url, Dictionary<string, string> parameters = null)
+        public async Task<bool> IsValid(ISimpleIdentityRepository repo, string method, string url, Stream body = null,  Dictionary<string, string> parameters = null)
         {
-            string computedSignature = await repo.TokenManager.ComputeSignature(Token, method, url, parameters);
+            string computedSignature = await repo.TokenManager.ComputeSignature(Token, method, url, body, parameters);
             return (computedSignature == null || Signature == computedSignature);
         }
 
