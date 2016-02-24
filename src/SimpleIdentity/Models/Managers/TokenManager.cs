@@ -17,17 +17,25 @@ namespace SimpleIdentity.Models
             _dbContext = dbContext;
         }
 
-        public async Task<string> GenerateNonce(int userId)
+        public async Task<string> ComputeSignature(string accessToken, string method, string url, Dictionary<string, string> parameters = null)
         {
-            var auths = await _dbContext.Users
-                .Where(b => b.Id == userId &&
-                    b.IsActive)
-                .Select(b => b.Authentication).ToListAsync();
-            if (!auths.Any()) { throw new SimpleIdentityDataNotFoundException("User[" + userId + "] cannot be found"); }
-            string nonce = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-            auths.First().Nonce = nonce;
-            await _dbContext.SaveChangesAsync();
-            return nonce;
+            var tokens = await _dbContext.Tokens
+                .Where(b => b.AccessToken == accessToken &&
+                    b.TokenTimeout > DateTime.Now)
+                .Include(b => b.Client)
+                .Select(b => b)
+                .ToListAsync();
+            if (!tokens.Any()) { throw new SimpleIdentityDataNotFoundException("Token[" + accessToken + "] cannot be found"); }
+            Token token = tokens.First();
+            if (!token.RequireSignature) { return null; }
+
+            Dictionary<string, string> dataDict = (parameters == null ? new Dictionary<string, string>() : new Dictionary<string, string>(parameters));
+            dataDict.Add("accessToken", accessToken);
+            dataDict.Add("clientId", token.Client.Id.ToString());
+            dataDict.Add("clientSecret", token.Client.Secret);
+            dataDict.Add("httpMethod", method);
+            dataDict.Add("httpUrl", url);
+            return Hash(dataDict.OrderBy(b => b.Key).Select(b => b.Value));
         }
 
         public async Task<Token> GenerateTokenBySignature(int userId, int clientId, string sign)
@@ -46,7 +54,7 @@ namespace SimpleIdentity.Models
             User user = auths.First().User;
             Client client = clients.First();
             if (auth.Nonce == null) { throw new SimpleIdentityDataException("Please generate nonce before accquiring a token"); }
-            string computedSignature = Hash(client.Secret + auth.Nonce + auth.Secret);
+            string computedSignature = Hash(new string[] { client.Secret, auth.Nonce, auth.Secret });
 
             auth.Nonce = null;
             await _dbContext.SaveChangesAsync();
@@ -108,9 +116,11 @@ namespace SimpleIdentity.Models
             return token;
         }
 
-        private static string Hash(string data)
+        private static string Hash(IEnumerable<string> data)
         {
-            HMACSHA256 hash = new HMACSHA256(UTF8Encoding.UTF8.GetBytes(data));
+            string dataString = "";
+            foreach(string str in data) { dataString += str; }
+            HMACSHA256 hash = new HMACSHA256(UTF8Encoding.UTF8.GetBytes(dataString));
             return Convert.ToBase64String(hash.Hash);
         }
     }

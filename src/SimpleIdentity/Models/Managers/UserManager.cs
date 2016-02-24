@@ -76,6 +76,19 @@ namespace SimpleIdentity.Models
             return userToUpdate;
         }
 
+        public async Task<string> GenerateNonce(int userId)
+        {
+            var auths = await _dbContext.Users
+                .Where(b => b.Id == userId &&
+                    b.IsActive)
+                .Select(b => b.Authentication).ToListAsync();
+            if (!auths.Any()) { throw new SimpleIdentityDataNotFoundException("User[" + userId + "] cannot be found"); }
+            string nonce = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            auths.First().Nonce = nonce;
+            await _dbContext.SaveChangesAsync();
+            return nonce;
+        }
+
         public async Task<IEnumerable<User>> ListUsers()
         {
             return await _dbContext.Users.ToListAsync();

@@ -37,7 +37,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 await GetBook(userId, bookId);
                 return new ObjectResult(await Repo.TransactionManager.ListTransactions(bookId, periodStart, periodEnd, noOfRecords));
 
@@ -66,7 +68,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 await GetBook(userId, bookId);
                 return new ObjectResult(await Repo.TransactionManager.CountTransactions(bookId, periodStart, periodEnd));
 
@@ -95,7 +99,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
@@ -124,7 +130,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Book book = await GetBook(userId, bookId);
                 Transaction transactionCreated = await Repo.TransactionManager.CreateTransaction(book, transaction);
                 return CreatedAtRoute("GetTransaction", new { controller = "transactions", userId = userId, bookId = bookId, transactionId = transactionCreated.Id }, transactionCreated);
@@ -154,7 +162,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 if (transaction == null) return HttpBadRequest(new { error = "Transaction object is missing" });
                 if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
                 Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);

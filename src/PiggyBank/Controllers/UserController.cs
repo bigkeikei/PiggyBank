@@ -27,7 +27,9 @@ namespace PiggyBank.Controllers
             };
             try
             {
-                if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 return new ObjectResult(await IdentityRepo.UserManager.FindUser(userId));
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -39,8 +41,9 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                string token = authorization.Substring(7);
-                return new ObjectResult(await IdentityRepo.UserManager.FindUserByToken(token));
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                return new ObjectResult(await IdentityRepo.UserManager.FindUserByToken(authHandler.Token));
             }
             catch (SimpleIdentityUserException) { return HttpUnauthorized(); }
             catch (SimpleIdentityDataNotFoundException) { return HttpUnauthorized(); }
@@ -70,7 +73,9 @@ namespace PiggyBank.Controllers
             };
             try
             {
-                if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 if (user.Id != userId) return HttpUnauthorized();
                 await IdentityRepo.UserManager.UpdateUser(user);
                 return new NoContentResult();

@@ -31,7 +31,9 @@ namespace PiggyBank.Controllers
             };
             try
             {
-                if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 List<Book> readableBooks = new List<Book>();
                 IEnumerable<Book> books = await Repo.BookManager.ListBooks(userId);
                 foreach (Book book in books)
@@ -42,7 +44,7 @@ namespace PiggyBank.Controllers
                         ResourceId = book.Id,
                         Scopes = Authorization.AuthScopes.Readable
                     };
-                    if (await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { readableBooks.Add(book); }
+                    if (await authHandler.FulFill(IdentityRepo, req)) { readableBooks.Add(book); }
                 }
                 return new ObjectResult(readableBooks.AsEnumerable());
             }
@@ -61,7 +63,9 @@ namespace PiggyBank.Controllers
             };
             try
             {
-                if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 if (book.UserId != userId) { return HttpUnauthorized(); }
                 Book bookCreated = await Repo.BookManager.CreateBook(book);
                 return CreatedAtRoute("GetBook", new { controller = "books", userId = userId, bookId = bookCreated.Id }, bookCreated);
@@ -89,7 +93,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Book book = await Repo.BookManager.FindBook(bookId);
                 if (book.UserId != userId) return HttpUnauthorized();
                 return new ObjectResult(book);
@@ -117,7 +123,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 if (book == null) return HttpBadRequest(new { error = "Book object not provided" });
                 if (book.Id != bookId) return HttpBadRequest(new { error = "Invalid Book.Id [" + book.Id + "]" });
                 Book bookToUpdate = await Repo.BookManager.FindBook(book.Id);

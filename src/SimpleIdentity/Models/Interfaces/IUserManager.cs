@@ -11,5 +11,6 @@ namespace SimpleIdentity.Models
         Task<User> FindUserByName(string userName);
         Task<User> FindUserByToken(string accessToken);
         Task<User> UpdateUser(User user);
+        Task<string> GenerateNonce(int userId);
     }
 }

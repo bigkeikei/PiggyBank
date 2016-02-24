@@ -38,7 +38,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Book book = await GetBook(userId, bookId);
                 IEnumerable<Account> accounts = await Repo.AccountManager.ListAccounts(book);
                 return new ObjectResult(accounts);
@@ -58,7 +60,9 @@ namespace PiggyBank.Controllers
             };
             try
             {
-                if (!await WebAuthorizationHandler.FulFill(IdentityRepo, authorization, req)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFill(IdentityRepo, req)) { return HttpUnauthorized(); }
                 IEnumerable<Account> accounts = await Repo.AccountManager.ListAccounts(userId);
                 List<Account> readableAccounts = new List<Account>();
                 foreach ( Account account in accounts)
@@ -82,7 +86,7 @@ namespace PiggyBank.Controllers
                         ResourceId = account.Id,
                         Scopes = Authorization.AuthScopes.Readable
                     });
-                    if (await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, accReqs)) { readableAccounts.Add(account); }
+                    if (await authHandler.FulFillAny(IdentityRepo, accReqs)) { readableAccounts.Add(account); }
                 }
                 return new ObjectResult(readableAccounts);
             }
@@ -108,7 +112,9 @@ namespace PiggyBank.Controllers
             });
             try
             {
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Book book = await GetBook(userId, bookId);
                 Account accountCreated = await Repo.AccountManager.CreateAccount(book, account);
                 return CreatedAtRoute("GetAccount", new { controller = "accounts", userId = userId, bookId = bookId, accountId = accountCreated.Id }, accountCreated);
@@ -136,6 +142,8 @@ namespace PiggyBank.Controllers
                 Scopes = Authorization.AuthScopes.Readable
             });
             try {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -143,7 +151,7 @@ namespace PiggyBank.Controllers
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(account);
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -163,6 +171,8 @@ namespace PiggyBank.Controllers
             });
             try
             {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
                 Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId, userId);
@@ -173,7 +183,7 @@ namespace PiggyBank.Controllers
                     ResourceId = accountToUpdate.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 await Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
             }
@@ -200,6 +210,8 @@ namespace PiggyBank.Controllers
             });
             try
             {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -207,7 +219,7 @@ namespace PiggyBank.Controllers
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetAccountDetail(accountId));
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -233,6 +245,8 @@ namespace PiggyBank.Controllers
             });
             try
             {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -240,7 +254,7 @@ namespace PiggyBank.Controllers
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetTransactions(accountId, periodStart, periodEnd, noOfRecords));
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -266,6 +280,8 @@ namespace PiggyBank.Controllers
             });
             try
             {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -273,7 +289,7 @@ namespace PiggyBank.Controllers
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
-                if (!await WebAuthorizationHandler.FulFillAny(IdentityRepo, authorization, reqs)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetTransactionCount(accountId, periodStart, periodEnd));
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }

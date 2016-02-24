@@ -9,23 +9,33 @@ namespace PiggyBank.Controllers
 {
     public class WebAuthorizationHandler
     {
-        private static string ExtractToken(string authorization)
+        public string Token { get; set; }
+        public string Signature { get; set; }
+
+        public WebAuthorizationHandler(string authorization)
         {
             if (authorization == null || authorization.Length == 0) throw new TokenExtractionException("Authorization is missing");
             if (!authorization.StartsWith("Bearer ")) throw new TokenExtractionException("Invalid authorization");
-            return authorization.Substring(7);
+            if (!authorization.Contains('.')) throw new TokenExtractionException("Invalid authorization");
+            int pos = authorization.IndexOf('.');
+            Token = authorization.Substring(7, pos - 7);
+            Signature = (pos == authorization.Length ? null : authorization.Substring(pos + 1));
         }
 
-        public static async Task<bool> FulFill(ISimpleIdentityRepository repo, string authorization, AuthorizationRequirement req)
+        public async Task<bool> IsValid(ISimpleIdentityRepository repo, string method, string url, Dictionary<string, string> parameters = null)
         {
-            string token = ExtractToken(authorization);
-            return await req.Fulfill(repo, token);
+            string computedSignature = await repo.TokenManager.ComputeSignature(Token, method, url, parameters);
+            return (computedSignature == null || Signature == computedSignature);
         }
 
-        public static async Task<bool> FulFillAny(ISimpleIdentityRepository repo, string authorization, IEnumerable<AuthorizationRequirement> reqs)
+        public async Task<bool> FulFill(ISimpleIdentityRepository repo, AuthorizationRequirement req)
         {
-            string token = ExtractToken(authorization);
-            return await AuthorizationRequirement.FulfillAny(repo, token, reqs);
+            return await req.Fulfill(repo, Token);
+        }
+
+        public async Task<bool> FulFillAny(ISimpleIdentityRepository repo, IEnumerable<AuthorizationRequirement> reqs)
+        {
+            return await AuthorizationRequirement.FulfillAny(repo, Token, reqs);
         }
     }
 
