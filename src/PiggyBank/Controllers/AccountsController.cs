@@ -230,6 +230,11 @@ namespace PiggyBank.Controllers
         [HttpGet("[controller]/{accountId}/transactions")]
         public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
         {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
+            if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
+            if (noOfRecords != null) { args.Add("noOfRecords", Request.Query["noOfRecords"]); }
+
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
             {
@@ -246,7 +251,7 @@ namespace PiggyBank.Controllers
             try
             {
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -265,6 +270,10 @@ namespace PiggyBank.Controllers
         [HttpGet("[controller]/{accountId}/transactions/count")]
         public async Task<IActionResult> GetTransactionCount(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
         {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
+            if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
+
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             reqs.Add(new AuthorizationRequirement
             {
@@ -281,7 +290,7 @@ namespace PiggyBank.Controllers
             try
             {
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
                 Account account = await Repo.AccountManager.FindAccount(accountId, userId);
                 reqs.Add(new AuthorizationRequirement
                 {
