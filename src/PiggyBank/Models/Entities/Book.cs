@@ -33,5 +33,9 @@ namespace PiggyBank.Models
         [JsonIgnore]
         [PiggyBankIgnoreWhenUpdate]
         public virtual ICollection<Transaction> Transactions { get; set; }
+
+        [JsonIgnore]
+        [PiggyBankIgnoreWhenUpdate]
+        public virtual ICollection<Tag> Tags { get; set; }
     }
 }

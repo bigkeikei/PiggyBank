@@ -176,7 +176,6 @@ namespace PiggyBank.Controllers
                 if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
                 if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
                 Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId, userId);
-                //if (accountToUpdate.Book.Id != bookId) return HttpNotFound(new { error = "Account [" + account.Id + "] not found in Book [" + bookId + "]" });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,

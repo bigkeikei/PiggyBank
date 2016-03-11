@@ -32,10 +32,10 @@ namespace PiggyBank
             // Add framework
             services.AddMvc();
             services.AddScoped(
-                (_) => (IPiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:ConnectionString"]));
+                (_) => (IPiggyBankDbContext)new PiggyBankMySqlDbContext(Configuration["Data:PiggyBankConnectionString"]));
             services.AddTransient<IPiggyBankRepository, PiggyBankRepository>();
             services.AddScoped(
-                (_) => (ISimpleIdentityDbContext)new SimpleIdentityMySqlDbContext(Configuration["Data:ConnectionString"]));
+                (_) => (ISimpleIdentityDbContext)new SimpleIdentityMySqlDbContext(Configuration["Data:SimpleIdentityConnectionString"]));
             services.AddTransient<ISimpleIdentityRepository, SimpleIdentityRepository>();
         }
 

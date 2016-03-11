@@ -113,6 +113,7 @@ namespace PiggyBank.Controllers
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
+                Book book = await GetBook(userId, bookId);
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
@@ -177,9 +178,72 @@ namespace PiggyBank.Controllers
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 if (transaction == null) return HttpBadRequest(new { error = "Transaction object is missing" });
                 if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
+                await GetBook(userId, bookId);
                 Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);
                 if (transactionToUpdate.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
                 await Repo.TransactionManager.UpdateTransaction(transaction);
+                return new NoContentResult();
+            }
+            catch (TokenExtractionException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
+        [HttpPost("{transactionId}/tags")]
+        public async Task<IActionResult> PostTag(int userId, int bookId, int transactionId, [FromBody]Tag tag, [FromHeader] string authorization)
+        {
+            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.User,
+                ResourceId = userId,
+                Scopes = Authorization.AuthScopes.Full
+            });
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.Book,
+                ResourceId = bookId,
+                Scopes = Authorization.AuthScopes.Editable
+            });
+            try
+            {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
+                await GetBook(userId, bookId);
+                await Repo.TransactionManager.AddTag(transactionId, tag);
+                return new NoContentResult();
+            }
+            catch (TokenExtractionException) { return HttpUnauthorized(); }
+            catch (PiggyBankBookException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
+            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
+        }
+
+        [HttpDelete("{transactionId}/tags/{tagId}")]
+        public async Task<IActionResult> DeleteTag(int userId, int bookId, int transactionId, int tagId, [FromHeader] string authorization)
+        {
+            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.User,
+                ResourceId = userId,
+                Scopes = Authorization.AuthScopes.Full
+            });
+            reqs.Add(new AuthorizationRequirement
+            {
+                AuthResourceType = Authorization.AuthResourceType.Book,
+                ResourceId = bookId,
+                Scopes = Authorization.AuthScopes.Editable
+            });
+            try
+            {
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
+                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
+                await GetBook(userId, bookId);
+                await Repo.TransactionManager.RemoveTag(transactionId, tagId);
                 return new NoContentResult();
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -194,5 +258,6 @@ namespace PiggyBank.Controllers
             if (book == null || book.UserId != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
             return book;
         }
+
     }
 }

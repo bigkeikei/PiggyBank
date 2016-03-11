@@ -36,6 +36,16 @@ namespace PiggyBank.Controllers
             catch (SimpleIdentityDataNotFoundException) { return HttpUnauthorized(); }
         }
 
+        [HttpGet("[controller]/{userId}/nonce")]
+        public async Task<IActionResult> GetNonce(int userId)
+        {
+            try
+            {
+                return new ObjectResult(await IdentityRepo.UserManager.GenerateNonce(userId));
+            }
+            catch (SimpleIdentityDataNotFoundException ex) { return HttpBadRequest(new { error = ex.Message }); }
+        }
+
         [HttpGet("me")]
         public async Task<IActionResult> Get([FromHeader] string authorization)
         {

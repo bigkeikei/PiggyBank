@@ -11,5 +11,7 @@ namespace PiggyBank.Models
         Task<Transaction> CreateTransaction(Book book, Transaction transaction);
         Task<Transaction> FindTransaction(int transactionId);
         Task<Transaction> UpdateTransaction(Transaction transaction);
+        Task AddTag(int transactionId, Tag tag);
+        Task RemoveTag(int transactionId, int tagId);
     }
 }

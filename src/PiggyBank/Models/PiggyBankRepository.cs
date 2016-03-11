@@ -7,12 +7,14 @@ namespace PiggyBank.Models
         public IBookManager BookManager { get; private set; }
         public IAccountManager AccountManager { get; private set; }
         public ITransactionManager TransactionManager { get; private set; }
+        public ITagManager TagManager { get; private set; }
         
         public PiggyBankRepository(IPiggyBankDbContext dbContext)
         {
             BookManager = new BookManager(dbContext);
             AccountManager = new AccountManager(dbContext);
             TransactionManager = new TransactionManager(dbContext);
+            TagManager = new TagManager(dbContext);
         }
     }
 }

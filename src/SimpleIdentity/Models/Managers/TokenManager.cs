@@ -44,7 +44,7 @@ namespace SimpleIdentity.Models
             return Hash(dataDict.OrderBy(b => b.Key).Select(b => b.Value));
         }
 
-        public async Task<Token> GenerateTokenBySignature(int userId, int clientId, string sign)
+        public async Task<Token> GenerateTokenBySignature(int userId, int clientId, string signature)
         {
             var auths = await _dbContext.Users
                 .Where(b => b.Id == userId &&
@@ -65,7 +65,7 @@ namespace SimpleIdentity.Models
             auth.Nonce = null;
             await _dbContext.SaveChangesAsync();
 
-            if (computedSignature != sign) { throw new SimpleIdentityDataException("Invalid signature[" + sign + "]"); }
+            if (computedSignature != signature) { throw new SimpleIdentityDataException("Invalid signature[" + signature + "]"); }
 
             return await GenerateTokenInternal(user, client, true);
         }
@@ -95,7 +95,8 @@ namespace SimpleIdentity.Models
                 RefreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
                 TokenTimeout = DateTime.Now.AddSeconds(60),
                 User = user,
-                Client = client
+                Client = client,
+                RequireSignature = requireSignature
             };
             _dbContext.Tokens.Add(token);
             await _dbContext.SaveChangesAsync();
@@ -126,8 +127,8 @@ namespace SimpleIdentity.Models
         {
             string dataString = "";
             foreach(string str in data) { dataString += str; }
-            HMACSHA256 hash = new HMACSHA256(UTF8Encoding.UTF8.GetBytes(dataString));
-            return Convert.ToBase64String(hash.Hash);
+            var hash = SHA256.Create();
+            return Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(dataString)));
         }
     }
 }

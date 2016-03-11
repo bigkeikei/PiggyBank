@@ -86,10 +86,8 @@ namespace PiggyBank.Models
 
         public async Task<Transaction> FindTransaction(int transactionId)
         {
-            Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
-            var q = await (from b in _dbContext.Transactions
-                           where b.Id == transactionId
-                           select b).ToListAsync();
+            //Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
+            var q = await _dbContext.Transactions.Where(b => b.Id == transactionId).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
             return q.First();
         }
@@ -147,6 +145,26 @@ namespace PiggyBank.Models
             // IsClosed validation
             if (transaction.IsClosed) throw new PiggyBankDataException("Closed Transaction cannot be created / updated");
 
+        }
+
+        public async Task AddTag(int transactionId, Tag tag)
+        {
+            Transaction transaction = await FindTransaction(transactionId);
+            if (tag == null) throw new PiggyBankDataException("Tag object is missing");
+            TagManager tagManager = new TagManager(_dbContext);
+            Tag tagToAdd = await tagManager.FindTag(tag.Id);
+            transaction.Tags.Add(tagToAdd);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task RemoveTag(int transactionId, int tagId)
+        {
+            Transaction transaction = await FindTransaction(transactionId);
+
+            var q = transaction.Tags.Where(b => b.Id == tagId);
+            if (!q.Any()) throw new PiggyBankDataNotFoundException("Tag [" + tagId + "] cannot be found in Transaction [" + transactionId + "]");
+            transaction.Tags.Remove(q.First());
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -47,5 +48,8 @@ namespace PiggyBank.Models
         [PiggyBankIgnoreWhenUpdate]
         [JsonIgnore]
         public virtual Book Book { get; set; }
+
+        [PiggyBankIgnoreWhenUpdate]
+        public virtual ICollection<Tag> Tags { get; set; }
     }
 }
