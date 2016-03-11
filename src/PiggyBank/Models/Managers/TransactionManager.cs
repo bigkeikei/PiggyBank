@@ -48,6 +48,9 @@ namespace PiggyBank.Models
                 q = q.Where(exp);
             }
             return await q.Where(b => b.IsValid)
+                .Include(b => b.CreditAccount)
+                .Include(b => b.DebitAccount)
+                .Include(b => b.Tags)
                 .OrderByDescending(b => b.TransactionDate)
                 .Take(noOfRecords??recordLimit)
                 .ToListAsync();
@@ -87,7 +90,11 @@ namespace PiggyBank.Models
         public async Task<Transaction> FindTransaction(int transactionId)
         {
             //Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
-            var q = await _dbContext.Transactions.Where(b => b.Id == transactionId).ToListAsync();
+            var q = await _dbContext.Transactions.Where(b => b.Id == transactionId)
+                .Include(b=>b.CreditAccount)
+                .Include(b=>b.DebitAccount)
+                .Include(b=>b.Tags)
+                .ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
             return q.First();
         }

@@ -112,8 +112,8 @@ namespace PiggyBank.Controllers
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
+                await GetBook(userId, bookId);
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
-                Book book = await GetBook(userId, bookId);
                 if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
