@@ -21,31 +21,31 @@ namespace PiggyBank.Controllers
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
         [HttpGet("{accountId}", Name = "GetAccount")]
-        public async Task<IActionResult> Get(int userId, int accountId, [FromHeader] string authorization)
+        public async Task<IActionResult> Get(int accountId, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Account,
-                ResourceId = accountId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
             try {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
-                Account account = await Repo.AccountManager.FindAccount(accountId, userId);
+                Account account = await Repo.AccountManager.FindAccount(accountId,true);
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = account.Book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Account,
+                    ResourceId = accountId,
+                    Scopes = Authorization.AuthScopes.Readable
+                });
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(account);
             }
@@ -55,28 +55,28 @@ namespace PiggyBank.Controllers
         }
 
         [HttpPut("{accountId}")]
-        public async Task<IActionResult> Put(int userId, int accountId, [FromBody] Account account, [FromHeader] string authorization)
+        public async Task<IActionResult> Put(int accountId, [FromBody] Account account, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
+            if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
+            if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
             try
             {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
-                if (account == null) return HttpBadRequest(new { error = "Account object is missing" });
-                if (account.Id != accountId) return HttpBadRequest(new { error = "Invalid Account.Id [" + account.Id + "]" });
-                Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId, userId);
+                Account accountToUpdate = await Repo.AccountManager.FindAccount(accountId, true);
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = accountToUpdate.Book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
                     ResourceId = accountToUpdate.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 await Repo.AccountManager.UpdateAccount(account);
                 return new NoContentResult();
@@ -87,32 +87,32 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("{accountId}/detail")]
-        public async Task<IActionResult> GetDetail(int userId, int accountId, [FromHeader] string authorization)
+        public async Task<IActionResult> GetDetail(int accountId, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Account,
-                ResourceId = accountId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
             try
             {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
-                Account account = await Repo.AccountManager.FindAccount(accountId, userId);
+                Account account = await Repo.AccountManager.FindAccount(accountId, true);
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = account.Book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Account,
+                    ResourceId = accountId,
+                    Scopes = Authorization.AuthScopes.Readable
+                });
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetAccountDetail(accountId));
             }
@@ -122,37 +122,37 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("{accountId}/transactions")]
-        public async Task<IActionResult> GetTransactions(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
+        public async Task<IActionResult> GetTransactions(int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
         {
             Dictionary<string, string> args = new Dictionary<string, string>();
             if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
             if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
             if (noOfRecords != null) { args.Add("noOfRecords", Request.Query["noOfRecords"]); }
 
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Account,
-                ResourceId = accountId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
             try
             {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
-                Account account = await Repo.AccountManager.FindAccount(accountId, userId);
+                Account account = await Repo.AccountManager.FindAccount(accountId, true);
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = account.Book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Account,
+                    ResourceId = accountId,
+                    Scopes = Authorization.AuthScopes.Readable
+                });
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetTransactions(accountId, periodStart, periodEnd, noOfRecords));
             }
@@ -162,36 +162,37 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("{accountId}/transactions/count")]
-        public async Task<IActionResult> GetTransactionCount(int userId, int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
+        public async Task<IActionResult> GetTransactionCount(int accountId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
         {
             Dictionary<string, string> args = new Dictionary<string, string>();
             if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
             if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
 
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Account,
-                ResourceId = accountId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
             try
             {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
-                Account account = await Repo.AccountManager.FindAccount(accountId, userId);
+                Account account = await Repo.AccountManager.FindAccount(accountId, true);
+
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = account.Book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
                     ResourceId = account.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Account,
+                    ResourceId = accountId,
+                    Scopes = Authorization.AuthScopes.Readable
+                });
+                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
+                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
                 return new ObjectResult(await Repo.AccountManager.GetTransactionCount(accountId, periodStart, periodEnd));
             }
