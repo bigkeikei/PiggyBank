@@ -10,8 +10,6 @@ namespace SimpleIdentity.Models
 
         public string Secret { get; set; }
 
-        public string Nonce { get; set; }
-
         public virtual User User { get; set; }
     }
 }
