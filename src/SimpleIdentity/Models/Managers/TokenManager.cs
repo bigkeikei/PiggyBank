@@ -44,25 +44,31 @@ namespace SimpleIdentity.Models
             return Hash(dataDict.OrderBy(b => b.Key).Select(b => b.Value));
         }
 
-        public async Task<Token> GenerateTokenBySignature(int userId, int clientId, string signature)
+        public async Task<Token> GenerateTokenBySignature(int userId, int clientId, string nonce, string signature)
         {
-            var auths = await _dbContext.Users
+            var users = await _dbContext.Users
                 .Where(b => b.Id == userId &&
                     b.IsActive)
-                .Select(b => new { User = b, Authentication = b.Authentication }).ToListAsync();
+                .Include(b => b.Authentication)
+                .ToListAsync();
+            var nonces = await _dbContext.UserNonces
+                .Where(b => b.User.Id == userId &&
+                    b.Nonce == nonce &&
+                    b.Timeout >= DateTime.Now &&
+                    b.IsValid)
+                .ToListAsync();
             var clients = await _dbContext.Clients
                 .Where(b => b.Id == clientId)
                 .Select(b => b).ToListAsync();
-            if (!auths.Any()) { throw new SimpleIdentityDataNotFoundException("User[" + userId + "] cannot be found"); }
+            if (!users.Any()) { throw new SimpleIdentityDataNotFoundException("User[" + userId + "] cannot be found"); }
             if (!clients.Any()) { throw new SimpleIdentityDataNotFoundException("Client[" + clientId + "] cannot be found"); }
+            if (!nonces.Any()) { throw new SimpleIdentityDataNotFoundException("Nonce[" + nonce + "] cannot be found or is invalid"); }
 
-            UserAuthentication auth = auths.First().Authentication;
-            User user = auths.First().User;
+            User user = users.First();
             Client client = clients.First();
-            if (auth.Nonce == null) { throw new SimpleIdentityDataException("Please generate nonce before accquiring a token"); }
-            string computedSignature = Hash(new string[] { client.Secret, auth.Nonce, auth.Secret });
+            string computedSignature = Hash(new string[] { client.Secret, nonce, user.Authentication.Secret });
 
-            auth.Nonce = null;
+            nonces.First().IsValid = false;
             await _dbContext.SaveChangesAsync();
 
             if (computedSignature != signature) { throw new SimpleIdentityDataException("Invalid signature[" + signature + "]"); }
@@ -93,7 +99,7 @@ namespace SimpleIdentity.Models
             {
                 AccessToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
                 RefreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
-                TokenTimeout = DateTime.Now.AddSeconds(60),
+                TokenTimeout = DateTime.Now.AddSeconds(900),
                 User = user,
                 Client = client,
                 RequireSignature = requireSignature

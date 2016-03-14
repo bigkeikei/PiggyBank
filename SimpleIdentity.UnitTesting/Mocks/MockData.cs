@@ -13,12 +13,14 @@ namespace SimpleIdentity.UnitTesting.Mocks
             Tokens = new List<Token>();
             Authorizations = new List<Authorization>();
             Clients = new List<Client>();
+            UserNonces = new List<UserNonce>();
         }
 
         public List<User> Users { get; set; }
         public List<Token> Tokens { get; set; }
         public List<Authorization> Authorizations { get; set; }
         public List<Client> Clients { get; set; }
+        public List<UserNonce> UserNonces { get; set; }
 
         public static MockData Seed()
         {

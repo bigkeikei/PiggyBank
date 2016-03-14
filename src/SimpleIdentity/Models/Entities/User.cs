@@ -19,5 +19,8 @@ namespace SimpleIdentity.Models
 
         [JsonIgnore]
         public virtual UserAuthentication Authentication { get; set; }
+
+        [JsonIgnore]
+        public ICollection<UserNonce> Nonces { get; set; }
     }
 }

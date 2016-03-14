@@ -9,6 +9,7 @@ namespace SimpleIdentity.Models
         DbSet<Token> Tokens { get; set; }
         DbSet<Authorization> Authorizations { get; set; }
         DbSet<Client> Clients { get; set; }
+        DbSet<UserNonce> UserNonces { get; set; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync();

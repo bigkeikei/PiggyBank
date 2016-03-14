@@ -17,14 +17,14 @@ namespace PiggyBank.Controllers
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]int? userId, [FromQuery]int? clientId, [FromQuery]string sign)
+        public async Task<IActionResult> Get([FromQuery]int? userId, [FromQuery]int? clientId, [FromQuery] string nonce, [FromQuery]string sign)
         {
             if (userId == null) { return HttpBadRequest(new { error = "userId is missing" }); }
             if (clientId == null) { return HttpBadRequest(new { error = "clientId is missing"}); }
             if (sign == null) { return HttpBadRequest(new { error = "sign is missing" }); }
             try
             {
-                return new ObjectResult(await IdentityRepo.TokenManager.GenerateTokenBySignature(userId.Value, clientId.Value, sign));
+                return new ObjectResult(await IdentityRepo.TokenManager.GenerateTokenBySignature(userId.Value, clientId.Value, nonce, sign));
             }
             catch (SimpleIdentityDataNotFoundException) { return HttpUnauthorized(); }
             catch (SimpleIdentityDataException) { return HttpUnauthorized(); }

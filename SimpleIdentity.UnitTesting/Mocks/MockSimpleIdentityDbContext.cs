@@ -24,6 +24,7 @@ namespace SimpleIdentity.UnitTesting.Mocks
             Tokens = GetMockDbSet(Data.Tokens).Object;
             Authorizations = GetMockDbSet(Data.Authorizations).Object;
             Clients = GetMockDbSet(Data.Clients).Object;
+            UserNonces = GetMockDbSet(Data.UserNonces).Object;
 
             SaveCount = 0;
         }
@@ -32,6 +33,7 @@ namespace SimpleIdentity.UnitTesting.Mocks
         public DbSet<Token> Tokens { get; set; }
         public DbSet<Authorization> Authorizations { get; set; }
         public DbSet<Client> Clients { get; set; }
+        public DbSet<UserNonce> UserNonces { get; set; }
 
         public MockData Data { get; }
         public int SaveCount { get; private set; }
