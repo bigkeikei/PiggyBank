@@ -10,7 +10,7 @@ using SimpleIdentity.Models;
 
 namespace PiggyBank.Controllers
 {
-    [Route("api/users/{userId}/books/{bookId}/[controller]")]
+    [Route("api/[controller]")]
     public class TransactionsController : Controller
     {
         [FromServices]
@@ -19,102 +19,29 @@ namespace PiggyBank.Controllers
         [FromServices]
         public ISimpleIdentityRepository IdentityRepo { get; set; }
 
-        [HttpGet]
-        public async Task<ActionResult> Get(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromQuery] int? noOfRecords, [FromHeader] string authorization)
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>();
-            if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
-            if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
-            if (noOfRecords != null) { args.Add("noOfRecords", Request.Query["noOfRecords"]); }
-
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
-            try
-            {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
-                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                await GetBook(userId, bookId);
-                return new ObjectResult(await Repo.TransactionManager.ListTransactions(bookId, periodStart, periodEnd, noOfRecords));
-
-            }
-            catch (TokenExtractionException) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
-        }
-
-        [HttpGet("count")]
-        public async Task<ActionResult> GetCount(int userId, int bookId, [FromQuery] DateTime? periodStart, [FromQuery] DateTime? periodEnd, [FromHeader] string authorization)
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>();
-            if (periodStart != null) { args.Add("periodStart", Request.Query["periodStart"]); }
-            if (periodEnd != null) { args.Add("periodEnd", Request.Query["periodEnd"]); }
-
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
-            try
-            {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, parameters: args)) { return HttpUnauthorized(); }
-                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                await GetBook(userId, bookId);
-                return new ObjectResult(await Repo.TransactionManager.CountTransactions(bookId, periodStart, periodEnd));
-
-            }
-            catch (TokenExtractionException) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
-        }
-
         [HttpGet("{transactionId}", Name = "GetTransaction")]
-        public async Task<IActionResult> Get(int userId, int bookId, int transactionId, [FromHeader] string authorization)
+        public async Task<IActionResult> Get(int transactionId, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Readable
-            });
             try
             {
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
+                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = book.UserId,
+                    Scopes = Authorization.AuthScopes.Full
+                });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Book,
+                    ResourceId = book.Id,
+                    Scopes = Authorization.AuthScopes.Readable
+                });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                await GetBook(userId, bookId);
-                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
-                if (transaction.Book.Id != bookId) return HttpUnauthorized();
                 return new ObjectResult(transaction);
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
@@ -123,64 +50,32 @@ namespace PiggyBank.Controllers
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post(int userId, int bookId, [FromBody]Transaction transaction, [FromHeader] string authorization)
-        {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Editable
-            });
-            try
-            {
-                WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
-                if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
-                if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                Book book = await GetBook(userId, bookId);
-                Transaction transactionCreated = await Repo.TransactionManager.CreateTransaction(book, transaction);
-                return CreatedAtRoute("GetTransaction", new { controller = "transactions", userId = userId, bookId = bookId, transactionId = transactionCreated.Id }, transactionCreated);
-
-            }
-            catch (TokenExtractionException) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
-            catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
-        }
-
         [HttpPut("{transactionId}")]
-        public async Task<IActionResult> Put(int userId, int bookId, int transactionId, [FromBody]Transaction transaction, [FromHeader] string authorization)
+        public async Task<IActionResult> Put(int transactionId, [FromBody]Transaction transaction, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Editable
-            });
+            if (transaction == null) return HttpBadRequest(new { error = "Transaction object is missing" });
+            if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
+
             try
             {
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+                Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);
+                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = book.UserId,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Book,
+                    ResourceId = book.Id,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                if (transaction == null) return HttpBadRequest(new { error = "Transaction object is missing" });
-                if (transaction.Id != transactionId) return HttpBadRequest(new { error = "Invalid Transaction.Id [" + transaction.Id + "]" });
-                await GetBook(userId, bookId);
-                Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);
-                if (transactionToUpdate.Book.Id != bookId) return HttpBadRequest(new { error = "Transaction [" + transactionId + "] cannot be found in Book [" + bookId + "]" });
                 await Repo.TransactionManager.UpdateTransaction(transaction);
                 return new NoContentResult();
             }
@@ -191,27 +86,28 @@ namespace PiggyBank.Controllers
         }
 
         [HttpPost("{transactionId}/tags")]
-        public async Task<IActionResult> PostTag(int userId, int bookId, int transactionId, [FromBody]Tag tag, [FromHeader] string authorization)
+        public async Task<IActionResult> PostTag(int transactionId, [FromBody]Tag tag, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Editable
-            });
             try
             {
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
+                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = book.UserId,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Book,
+                    ResourceId = book.Id,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path, Request.Body)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                await GetBook(userId, bookId);
                 await Repo.TransactionManager.AddTag(transactionId, tag);
                 return new NoContentResult();
             }
@@ -222,27 +118,28 @@ namespace PiggyBank.Controllers
         }
 
         [HttpDelete("{transactionId}/tags/{tagId}")]
-        public async Task<IActionResult> DeleteTag(int userId, int bookId, int transactionId, int tagId, [FromHeader] string authorization)
+        public async Task<IActionResult> DeleteTag(int transactionId, int tagId, [FromHeader] string authorization)
         {
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.User,
-                ResourceId = userId,
-                Scopes = Authorization.AuthScopes.Full
-            });
-            reqs.Add(new AuthorizationRequirement
-            {
-                AuthResourceType = Authorization.AuthResourceType.Book,
-                ResourceId = bookId,
-                Scopes = Authorization.AuthScopes.Editable
-            });
             try
             {
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
+                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.User,
+                    ResourceId = book.UserId,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
+                reqs.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = Authorization.AuthResourceType.Book,
+                    ResourceId = book.Id,
+                    Scopes = Authorization.AuthScopes.Editable
+                });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
                 if (!await authHandler.IsValid(IdentityRepo, Request.Method, Request.Path)) { return HttpUnauthorized(); }
                 if (!await authHandler.FulFillAny(IdentityRepo, reqs)) { return HttpUnauthorized(); }
-                await GetBook(userId, bookId);
                 await Repo.TransactionManager.RemoveTag(transactionId, tagId);
                 return new NoContentResult();
             }
@@ -251,13 +148,5 @@ namespace PiggyBank.Controllers
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
-
-        private async Task<Book> GetBook(int userId, int bookId)
-        {
-            Book book = await Repo.BookManager.FindBook(bookId);
-            if (book == null || book.UserId != userId) throw new PiggyBankBookException("Book [" + bookId + "] not found in User [" + userId + "]");
-            return book;
-        }
-
     }
 }
