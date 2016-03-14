@@ -35,11 +35,13 @@ namespace PiggyBank.Models
             return tag;
         }
 
-        public async Task<Tag> FindTag(int tagId)
+        public async Task<Tag> FindTag(int tagId, bool populateBook = false)
         {
-            var q = await _dbContext.Tags.Where(b => b.Id == tagId).ToListAsync();
-            if (!q.Any()) throw new PiggyBankDataNotFoundException("Tag [" + tagId + "] cannot be found");
-            return q.First();
+            var q = _dbContext.Tags.Where(b => b.Id == tagId);
+            if (populateBook) { q = q.Include(b => b.Book); }
+            var tags = await q.ToListAsync();
+            if (!tags.Any()) throw new PiggyBankDataNotFoundException("Tag [" + tagId + "] cannot be found");
+            return tags.First();
         }
 
         public async Task<Tag> UpdateTag(Tag tag)

@@ -24,19 +24,18 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
-                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = transaction.Book.UserId,
                     Scopes = Authorization.AuthScopes.Full
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = transaction.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
@@ -59,18 +58,17 @@ namespace PiggyBank.Controllers
             try
             {
                 List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
-                Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId);
-                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                Transaction transactionToUpdate = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = transactionToUpdate.Book.UserId,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = transactionToUpdate.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
@@ -91,18 +89,17 @@ namespace PiggyBank.Controllers
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             try
             {
-                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
-                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = transaction.Book.UserId,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = transaction.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
@@ -123,18 +120,17 @@ namespace PiggyBank.Controllers
             List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             try
             {
-                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId);
-                Book book = await Repo.BookManager.FindBook(transaction.Book.Id);
+                Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = transaction.Book.UserId,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = transaction.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);

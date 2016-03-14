@@ -25,19 +25,18 @@ namespace PiggyBank.Controllers
         {
             try
             {
-                Tag tag = await Repo.TagManager.FindTag(tagId);
-                Book book = await Repo.BookManager.FindBook(tag.Book.Id);
+                Tag tag = await Repo.TagManager.FindTag(tagId, true);
                 List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = tag.Book.UserId,
                     Scopes = Authorization.AuthScopes.Full
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = tag.Book.Id,
                     Scopes = Authorization.AuthScopes.Readable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);
@@ -57,19 +56,18 @@ namespace PiggyBank.Controllers
             if (tag.Id != tagId) return HttpBadRequest(new { error = "Invalid Tag.Id [" + tag.Id + "]" });
             try
             {
-                Tag tagToUpdate = await Repo.TagManager.FindTag(tagId);
-                Book book = await Repo.BookManager.FindBook(tag.Book.Id);
+                Tag tagToUpdate = await Repo.TagManager.FindTag(tagId, true);
                 List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.User,
-                    ResourceId = book.UserId,
+                    ResourceId = tag.Book.UserId,
                     Scopes = Authorization.AuthScopes.Full
                 });
                 reqs.Add(new AuthorizationRequirement
                 {
                     AuthResourceType = Authorization.AuthResourceType.Book,
-                    ResourceId = book.Id,
+                    ResourceId = tag.Book.Id,
                     Scopes = Authorization.AuthScopes.Editable
                 });
                 WebAuthorizationHandler authHandler = new WebAuthorizationHandler(authorization);

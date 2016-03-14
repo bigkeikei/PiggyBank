@@ -87,16 +87,16 @@ namespace PiggyBank.Models
             return transaction;
         }
 
-        public async Task<Transaction> FindTransaction(int transactionId)
+        public async Task<Transaction> FindTransaction(int transactionId, bool populateBook = false)
         {
-            //Transaction transaction = await _dbContext.Transactions.FindAsync(transactionId);
-            var q = await _dbContext.Transactions.Where(b => b.Id == transactionId)
-                .Include(b=>b.CreditAccount)
-                .Include(b=>b.DebitAccount)
-                .Include(b=>b.Tags)
-                .ToListAsync();
-            if (!q.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
-            return q.First();
+            var q = _dbContext.Transactions.Where(b => b.Id == transactionId)
+                .Include(b => b.CreditAccount)
+                .Include(b => b.DebitAccount)
+                .Include(b => b.Tags);
+            if (populateBook) { q = q.Include(b => b.Book); }
+            var transactions = await q.ToListAsync();
+            if (!transactions.Any()) throw new PiggyBankDataNotFoundException("Transaction [" + transactionId + "] cannot be found");
+            return transactions.First();
         }
 
         public async Task<Transaction> UpdateTransaction(Transaction transaction)
