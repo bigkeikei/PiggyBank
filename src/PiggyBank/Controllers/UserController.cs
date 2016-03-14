@@ -100,7 +100,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpGet("[controller]/{userId}/books")]
-        public async Task<IActionResult> List(int userId, [FromHeader] string authorization)
+        public async Task<IActionResult> GetBooks(int userId, [FromHeader] string authorization)
         {
             try
             {
@@ -140,7 +140,7 @@ namespace PiggyBank.Controllers
         }
 
         [HttpPost("[controller]/{userId}/books")]
-        public async Task<IActionResult> Post(int userId, [FromBody] Book book, [FromHeader] string authorization)
+        public async Task<IActionResult> PostBook(int userId, [FromBody] Book book, [FromHeader] string authorization)
         {
             if (book.UserId != userId) { return HttpUnauthorized(); }
             try

@@ -84,11 +84,12 @@ namespace PiggyBank.Controllers
         }
 
         [HttpPost("{transactionId}/tags")]
-        public async Task<IActionResult> PostTag(int transactionId, [FromBody]Tag tag, [FromHeader] string authorization)
+        public async Task<IActionResult> Tag(int transactionId, [FromBody]Tag tag, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
+            if (tag == null) return HttpBadRequest(new { error = "Tag object is missing" });
             try
             {
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -109,17 +110,16 @@ namespace PiggyBank.Controllers
                 return new NoContentResult();
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
 
         [HttpDelete("{transactionId}/tags/{tagId}")]
-        public async Task<IActionResult> DeleteTag(int transactionId, int tagId, [FromHeader] string authorization)
+        public async Task<IActionResult> UnTag(int transactionId, int tagId, [FromHeader] string authorization)
         {
-            List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
             try
             {
+                List<AuthorizationRequirement> reqs = new List<AuthorizationRequirement>();
                 Transaction transaction = await Repo.TransactionManager.FindTransaction(transactionId, true);
                 reqs.Add(new AuthorizationRequirement
                 {
@@ -140,7 +140,6 @@ namespace PiggyBank.Controllers
                 return new NoContentResult();
             }
             catch (TokenExtractionException) { return HttpUnauthorized(); }
-            catch (PiggyBankBookException) { return HttpUnauthorized(); }
             catch (PiggyBankDataNotFoundException) { return HttpUnauthorized(); }
             catch (PiggyBankDataException e) { return HttpBadRequest(new { error = e.Message }); }
         }
