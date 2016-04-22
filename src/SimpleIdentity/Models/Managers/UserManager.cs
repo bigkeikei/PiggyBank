@@ -32,18 +32,14 @@ namespace SimpleIdentity.Models
 
         public async Task<User> FindUser(int userId)
         {
-            var q = await (from b in _dbContext.Users
-                           where b.Id == userId
-                           select b).ToListAsync();
+            var q = await _dbContext.Users.Where(u => u.Id == userId).ToListAsync();
             if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User [" + userId + "] cannot be found");
             return q.First();
         }
 
         public async Task<User> FindUserByName(string userName)
         {
-            var q = await (from b in _dbContext.Users
-                           where b.Name == userName
-                           select b).ToListAsync();
+            var q = await _dbContext.Users.Where(u => u.Name == userName).ToListAsync();
             if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User [" + userName + "] cannot be found");
             return q.First();
         }
