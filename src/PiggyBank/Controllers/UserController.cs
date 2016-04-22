@@ -121,7 +121,7 @@ namespace PiggyBank.Controllers
                     List<AuthorizationRequirement> bookReqs = new List<AuthorizationRequirement>();
                     bookReqs.Add(new AuthorizationRequirement
                     {
-                        AuthResourceType = Authorization.AuthResourceType.Book,
+                        AuthResourceType = Authorization.AuthResourceType.User,
                         ResourceId = userId,
                         Scopes = Authorization.AuthScopes.Full
                     });

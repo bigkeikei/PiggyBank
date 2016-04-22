@@ -19,10 +19,8 @@ namespace PiggyBank.Models
 
         public async Task<IEnumerable<Book>> ListBooks(int userId)
         {
-            var books = await (from b in _dbContext.Books
-                         where b.UserId == userId
-                               select b).ToListAsync();
-            return books;
+            var q = _dbContext.Books.Where(b => b.UserId == userId);
+            return await q.ToListAsync();
         }
 
         public async Task<Book> CreateBook(Book book)
@@ -36,9 +34,12 @@ namespace PiggyBank.Models
 
         public async Task<Book> FindBook(int bookId)
         {
+            /*
             var q = await (from b in _dbContext.Books
                            where b.Id == bookId
                            select b).ToListAsync();
+            */
+            var q = await _dbContext.Books.Where(b => b.Id == bookId).ToListAsync();
             if (!q.Any()) throw new PiggyBankDataNotFoundException("Book [" + bookId + "] cannot be found");
             return q.First();
         }
@@ -58,12 +59,19 @@ namespace PiggyBank.Models
         public async Task CloseBook(int bookId, DateTime closingDate)
         {
             DateTime timestamp = DateTime.Now;
+            /*
             var q = (from t in _dbContext.Transactions
                      where !t.IsClosed &&
                      t.IsValid &&
                      t.Book.Id == bookId &&
                      t.TransactionDate <= closingDate
                      select t);
+            */
+            var q = _dbContext.Transactions.Where(
+                t => !t.IsClosed &&
+                    t.IsValid &&
+                    t.Book.Id == bookId &&
+                    t.TransactionDate <= closingDate);
             List<Transaction> transactions = await q.ToListAsync();
             foreach(Transaction t in transactions)
             {
