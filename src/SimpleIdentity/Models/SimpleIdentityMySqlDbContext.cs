@@ -1,5 +1,6 @@
 ﻿using System.Data.Entity;
 using MySql.Data.Entity;
+using System.Diagnostics;
 
 namespace SimpleIdentity.Models
 {
@@ -8,6 +9,7 @@ namespace SimpleIdentity.Models
     {
         public SimpleIdentityMySqlDbContext(string connectionString) : base(connectionString)
         {
+            //this.Database.Log = (s => Debug.WriteLine(s));
             Database.CreateIfNotExists();
         }
 

@@ -9,6 +9,8 @@ namespace SimpleIdentity.Models
     public class AuthorizationManager : IAuthorizationManager
     {
         private ISimpleIdentityDbContext _dbContext;
+        private int _currentUserId;
+        private List<AuthorizationRequirement> _fulfilledRequirements;
 
         public AuthorizationManager(ISimpleIdentityDbContext dbContext)
         {
@@ -41,7 +43,18 @@ namespace SimpleIdentity.Models
             int resourceId,
             Authorization.AuthScopes scopes)
         {
-            return await _dbContext.Authorizations
+            if (_currentUserId != userId)
+            {
+                _currentUserId = userId;
+                _fulfilledRequirements = new List<AuthorizationRequirement>();
+            }
+            if (_fulfilledRequirements.Any(req => req.AuthResourceType == resourceType &&
+               req.ResourceId == resourceId &&
+               req.Scopes.HasFlag(scopes)))
+            {
+                return true;
+            }
+            bool dbResult = await _dbContext.Authorizations
                 .Where(b => b.User.Id == userId &&
                     b.ResourceType == resourceType &&
                     b.ResourceId == resourceId &&
@@ -49,6 +62,16 @@ namespace SimpleIdentity.Models
                     !b.IsRevoked &&
                     b.User.IsActive)
                 .AnyAsync();
+            if (dbResult)
+            {
+                _fulfilledRequirements.Add(new AuthorizationRequirement
+                {
+                    AuthResourceType = resourceType,
+                    ResourceId = resourceId,
+                    Scopes = scopes
+                });
+            }
+            return dbResult;
         }
     }
 }

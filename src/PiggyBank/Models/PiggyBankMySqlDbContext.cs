@@ -1,5 +1,6 @@
 ﻿using System.Data.Entity;
 using MySql.Data.Entity;
+using System.Diagnostics;
 
 namespace PiggyBank.Models
 {
@@ -8,6 +9,7 @@ namespace PiggyBank.Models
     {
         public PiggyBankMySqlDbContext(string connectionString) : base(connectionString)
         {
+            //this.Database.Log = (s => Debug.WriteLine(s));
             Database.CreateIfNotExists();
         }
 

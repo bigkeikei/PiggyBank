@@ -10,12 +10,12 @@ namespace SimpleIdentity.Models
     public class UserManager : IUserManager
     {
         private ISimpleIdentityDbContext _dbContext;
-        private Dictionary<string, User> _tokenCache;
+        private string _tokenCache;
+        private User _userCache;
 
         public UserManager(ISimpleIdentityDbContext dbContext)
         {
             _dbContext = dbContext;
-            _tokenCache = new Dictionary<string, User>();
         }
 
         public async Task<User> CreateUser(User user)
@@ -48,7 +48,7 @@ namespace SimpleIdentity.Models
 
         public async Task<User> FindUserByToken(string accessToken)
         {
-            if (!_tokenCache.Keys.Contains(accessToken))
+            if (_tokenCache != accessToken)
             {
                 var q = await _dbContext.Tokens
                     .Where(b => b.AccessToken == accessToken &&
@@ -58,9 +58,10 @@ namespace SimpleIdentity.Models
                     .Select(b => b.User).ToListAsync();
                 if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User with Token [" + accessToken + "] cannot be found");
 
-                _tokenCache.Add(accessToken, q.First());
+                _tokenCache = accessToken;
+                _userCache = q.First();
             }
-            return _tokenCache[accessToken];
+            return _userCache;
         }
 
         public async Task<User> UpdateUser(User user)
