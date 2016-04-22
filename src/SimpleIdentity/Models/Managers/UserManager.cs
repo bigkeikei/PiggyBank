@@ -10,10 +10,12 @@ namespace SimpleIdentity.Models
     public class UserManager : IUserManager
     {
         private ISimpleIdentityDbContext _dbContext;
+        private Dictionary<string, User> _tokenCache;
 
         public UserManager(ISimpleIdentityDbContext dbContext)
         {
             _dbContext = dbContext;
+            _tokenCache = new Dictionary<string, User>();
         }
 
         public async Task<User> CreateUser(User user)
@@ -46,14 +48,19 @@ namespace SimpleIdentity.Models
 
         public async Task<User> FindUserByToken(string accessToken)
         {
-            var q = await _dbContext.Tokens
-                .Where(b => b.AccessToken == accessToken && 
-                    b.TokenTimeout > DateTime.Now && 
-                    !b.IsRevoked &&
-                    b.User.IsActive)
-                .Select(b => new { User = b.User }).ToListAsync();
-            if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User with Token [" + accessToken + "] cannot be found");
-            return q.First().User;
+            if (!_tokenCache.Keys.Contains(accessToken))
+            {
+                var q = await _dbContext.Tokens
+                    .Where(b => b.AccessToken == accessToken &&
+                        b.TokenTimeout > DateTime.Now &&
+                        !b.IsRevoked &&
+                        b.User.IsActive)
+                    .Select(b => b.User).ToListAsync();
+                if (!q.Any()) throw new SimpleIdentityDataNotFoundException("User with Token [" + accessToken + "] cannot be found");
+
+                _tokenCache.Add(accessToken, q.First());
+            }
+            return _tokenCache[accessToken];
         }
 
         public async Task<User> UpdateUser(User user)
@@ -63,7 +70,7 @@ namespace SimpleIdentity.Models
             if (user.Email == null || user.Email.Length == 0) throw new SimpleIdentityDataException("User.Email is missing");
 
             User userToUpdate = await FindUser(user.Id);
-            
+
             if (userToUpdate.Name != user.Name) throw new SimpleIdentityDataException("Editing User.Name is not supported");
             userToUpdate.Email = user.Email;
             userToUpdate.IsActive = user.IsActive;
@@ -75,7 +82,8 @@ namespace SimpleIdentity.Models
         public async Task<string> GenerateNonce(int userId)
         {
             User user = await FindUser(userId);
-            UserNonce nonce = new UserNonce {
+            UserNonce nonce = new UserNonce
+            {
                 User = user,
                 IsValid = true,
                 Timeout = DateTime.Now.AddSeconds(60),
